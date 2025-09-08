@@ -1,5 +1,8 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using System.Net.Http.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NordAPI.Swish.Security.Http;
 
@@ -9,11 +12,14 @@ public sealed class SwishClient : ISwishClient
 {
     private readonly HttpClient _http;
     private readonly ILogger<SwishClient>? _logger;
+    private readonly SwishOptions _options;
 
-    public SwishClient(HttpClient httpClient, ILogger<SwishClient>? logger = null)
+    // Enda konstruktorn (inga tvetydigheter)
+    public SwishClient(HttpClient httpClient, SwishOptions? options = null, ILogger<SwishClient>? logger = null)
     {
         _http = httpClient;
         _logger = logger;
+        _options = options ?? new SwishOptions();
     }
 
     public static HttpClient CreateHttpClient(
@@ -46,13 +52,39 @@ public sealed class SwishClient : ISwishClient
         return payload;
     }
 
-    // --- Nya interface-metoder (dummy-implementationer) ---
-    public Task<string> CreatePaymentAsync(object request, CancellationToken ct = default)
-        => Task.FromResult("NOT_IMPLEMENTED");
+    // --- Implementering av ISwishClient ---
 
-    public Task<string> RefundPaymentAsync(object request, CancellationToken ct = default)
-        => Task.FromResult("NOT_IMPLEMENTED");
+    public async Task<CreatePaymentResponse> CreatePaymentAsync(CreatePaymentRequest request, CancellationToken ct = default)
+    {
+        var url = _options.PaymentsPath; // t.ex. "/paymentrequests"
+        _logger?.LogInformation("POST {Url}", url);
 
-    public Task<string> GetPaymentStatusAsync(string paymentRequestToken, CancellationToken ct = default)
-        => Task.FromResult("NOT_IMPLEMENTED");
+        using var res = await _http.PostAsJsonAsync(url, request, ct);
+        if (!res.IsSuccessStatusCode)
+        {
+            var err = await res.Content.ReadAsStringAsync(ct);
+            throw new HttpRequestException($"Swish CreatePayment failed: {(int)res.StatusCode} {res.ReasonPhrase}. Body: {err}");
+        }
+
+        var payload = await res.Content.ReadFromJsonAsync<CreatePaymentResponse>(cancellationToken: ct)
+                      ?? throw new InvalidOperationException("Empty CreatePaymentResponse");
+        return payload;
+    }
+
+    public async Task<CreatePaymentResponse> GetPaymentStatusAsync(string paymentId, CancellationToken ct = default)
+    {
+        var url = $"{_options.PaymentsPath}/{paymentId}";
+        _logger?.LogInformation("GET {Url}", url);
+
+        using var res = await _http.GetAsync(url, ct);
+        if (!res.IsSuccessStatusCode)
+        {
+            var err = await res.Content.ReadAsStringAsync(ct);
+            throw new HttpRequestException($"Swish GetPaymentStatus failed: {(int)res.StatusCode} {res.ReasonPhrase}. Body: {err}");
+        }
+
+        var payload = await res.Content.ReadFromJsonAsync<CreatePaymentResponse>(cancellationToken: ct)
+                      ?? throw new InvalidOperationException("Empty GetPaymentStatus response");
+        return payload;
+    }
 }
