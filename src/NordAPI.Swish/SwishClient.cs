@@ -1,10 +1,11 @@
-﻿using System.Net.Http.Json;
+﻿using System.Net.Http;
+using System.Net.Http.Json;
 using Microsoft.Extensions.Logging;
 using NordAPI.Swish.Security.Http;
 
 namespace NordAPI.Swish;
 
-public sealed class SwishClient
+public sealed class SwishClient : ISwishClient
 {
     private readonly HttpClient _http;
     private readonly ILogger<SwishClient>? _logger;
@@ -44,4 +45,14 @@ public sealed class SwishClient
         _logger?.LogInformation("Ping OK, length={Length}", payload.Length);
         return payload;
     }
+
+    // --- Nya interface-metoder (dummy-implementationer) ---
+    public Task<string> CreatePaymentAsync(object request, CancellationToken ct = default)
+        => Task.FromResult("NOT_IMPLEMENTED");
+
+    public Task<string> RefundPaymentAsync(object request, CancellationToken ct = default)
+        => Task.FromResult("NOT_IMPLEMENTED");
+
+    public Task<string> GetPaymentStatusAsync(string paymentRequestToken, CancellationToken ct = default)
+        => Task.FromResult("NOT_IMPLEMENTED");
 }
