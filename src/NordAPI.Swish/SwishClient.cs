@@ -14,7 +14,6 @@ public sealed class SwishClient : ISwishClient
     private readonly ILogger<SwishClient>? _logger;
     private readonly SwishOptions _options;
 
-    // Enda konstruktorn (inga tvetydigheter)
     public SwishClient(HttpClient httpClient, SwishOptions? options = null, ILogger<SwishClient>? logger = null)
     {
         _http = httpClient;
@@ -41,7 +40,7 @@ public sealed class SwishClient : ISwishClient
         return http;
     }
 
-    // Exempelmetod (placeholder)
+    // --- Ping (placeholder) ---
     public async Task<string> PingAsync(CancellationToken ct = default)
     {
         _logger?.LogInformation("Calling Ping endpoint...");
@@ -52,11 +51,10 @@ public sealed class SwishClient : ISwishClient
         return payload;
     }
 
-    // --- Implementering av ISwishClient ---
-
+    // --- Payments ---
     public async Task<CreatePaymentResponse> CreatePaymentAsync(CreatePaymentRequest request, CancellationToken ct = default)
     {
-        var url = _options.PaymentsPath; // t.ex. "/paymentrequests"
+        var url = _options.PaymentsPath;
         _logger?.LogInformation("POST {Url}", url);
 
         using var res = await _http.PostAsJsonAsync(url, request, ct);
@@ -87,4 +85,40 @@ public sealed class SwishClient : ISwishClient
                       ?? throw new InvalidOperationException("Empty GetPaymentStatus response");
         return payload;
     }
+
+    // --- Refunds ---
+    public async Task<CreateRefundResponse> CreateRefundAsync(CreateRefundRequest request, CancellationToken ct = default)
+    {
+        var url = _options.RefundsPath;
+        _logger?.LogInformation("POST {Url}", url);
+
+        using var res = await _http.PostAsJsonAsync(url, request, ct);
+        if (!res.IsSuccessStatusCode)
+        {
+            var err = await res.Content.ReadAsStringAsync(ct);
+            throw new HttpRequestException($"Swish CreateRefund failed: {(int)res.StatusCode} {res.ReasonPhrase}. Body: {err}");
+        }
+
+        var payload = await res.Content.ReadFromJsonAsync<CreateRefundResponse>(cancellationToken: ct)
+                      ?? throw new InvalidOperationException("Empty CreateRefundResponse");
+        return payload;
+    }
+
+    public async Task<CreateRefundResponse> GetRefundStatusAsync(string refundId, CancellationToken ct = default)
+    {
+        var url = $"{_options.RefundsPath}/{refundId}";
+        _logger?.LogInformation("GET {Url}", url);
+
+        using var res = await _http.GetAsync(url, ct);
+        if (!res.IsSuccessStatusCode)
+        {
+            var err = await res.Content.ReadAsStringAsync(ct);
+            throw new HttpRequestException($"Swish GetRefundStatus failed: {(int)res.StatusCode} {res.ReasonPhrase}. Body: {err}");
+        }
+
+        var payload = await res.Content.ReadFromJsonAsync<CreateRefundResponse>(cancellationToken: ct)
+                      ?? throw new InvalidOperationException("Empty GetRefundStatus response");
+        return payload;
+    }
 }
+
