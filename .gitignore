@@ -6,3 +6,12 @@ obj/
 *.suo
 TestResults/
 coveragereport/
+# cert
+*.pfx
+*.p12
+*.pem
+*.key
+*.crt
+*.cer
+
+
