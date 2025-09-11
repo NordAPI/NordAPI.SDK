@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using NordAPI.Swish.Errors;
 using NordAPI.Swish.Security.Http;
 
 namespace NordAPI.Swish;
@@ -12,13 +16,13 @@ public sealed class SwishClient : ISwishClient
 {
     private readonly HttpClient _http;
     private readonly ILogger<SwishClient>? _logger;
-    private readonly SwishOptions _options;
+    private readonly SwishOptions _options = new();
 
     public SwishClient(HttpClient httpClient, SwishOptions? options = null, ILogger<SwishClient>? logger = null)
     {
         _http = httpClient;
         _logger = logger;
-        _options = options ?? new SwishOptions();
+        if (options is not null) _options = options;
     }
 
     public static HttpClient CreateHttpClient(
@@ -40,7 +44,120 @@ public sealed class SwishClient : ISwishClient
         return http;
     }
 
-    // --- Ping (placeholder) ---
+    // ========================== Policy-helper INNE I KLASSEN ==========================
+
+    private static readonly JsonSerializerOptions _json = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        PropertyNameCaseInsensitive = true,
+        WriteIndented = false
+    };
+
+    /// <summary>
+    /// Central HTTP-helper som sätter Idempotency-Key för create, hanterar retry på transienta fel
+    /// och mappar felkoder till våra SwishException-typer.
+    /// </summary>
+    private async Task<T> SendWithPolicyAsync<T>(
+        HttpRequestMessage request,
+        bool isCreate = false,
+        CancellationToken ct = default)
+    {
+        // 1) Idempotency-Key för create-operationer (om inte redan satt)
+        if (isCreate && !request.Headers.Contains("Idempotency-Key"))
+        {
+            request.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString("N"));
+        }
+
+        const int maxAttempts = 3;
+        int attempt = 0;
+        Exception? lastEx = null;
+
+        while (attempt < maxAttempts)
+        {
+            attempt++;
+            try
+            {
+                using var response = await _http.SendAsync(
+                    request, HttpCompletionOption.ResponseHeadersRead, ct);
+
+                var body = response.Content == null
+                    ? null
+                    : await response.Content.ReadAsStringAsync(ct);
+
+                // 2xx → success
+                if ((int)response.StatusCode is >= 200 and < 300)
+                {
+                    if (typeof(T) == typeof(string))
+                        return (T)(object)(body ?? string.Empty);
+
+                    if (string.IsNullOrWhiteSpace(body))
+                        return default!;
+
+                    var obj = JsonSerializer.Deserialize<T>(body, _json)!;
+                    return obj;
+                }
+
+                // Felmappning
+                if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
+                    throw new SwishAuthException("Authentication/authorization failed", response.StatusCode, body);
+
+                if (response.StatusCode is HttpStatusCode.BadRequest or (HttpStatusCode)422)
+                {
+                    var apiErr = SwishApiError.TryParse(body);
+                    var msg = apiErr is null ? "Validation failed" : $"Validation failed: {apiErr}";
+                    throw new SwishValidationException(msg, response.StatusCode, body);
+                }
+
+                if (response.StatusCode == HttpStatusCode.Conflict)
+                    throw new SwishConflictException("Conflict (possibly duplicate/idempotent key collision)", response.StatusCode, body);
+
+                // Transienta fel → retry
+                if (response.StatusCode is HttpStatusCode.RequestTimeout
+                    or (HttpStatusCode)429
+                    or HttpStatusCode.InternalServerError
+                    or HttpStatusCode.BadGateway
+                    or HttpStatusCode.ServiceUnavailable
+                    or HttpStatusCode.GatewayTimeout)
+                {
+                    throw new SwishTransientException($"Transient HTTP {(int)response.StatusCode}", response.StatusCode, body);
+                }
+
+                // Annat oväntat fel
+                throw new SwishException($"Unexpected HTTP {(int)response.StatusCode}", response.StatusCode, body);
+            }
+            catch (SwishTransientException ex) when (attempt < maxAttempts)
+            {
+                lastEx = ex;
+                await Task.Delay(BackoffDelay(attempt), ct);
+                continue;
+            }
+            catch (HttpRequestException ex) when (attempt < maxAttempts)
+            {
+                lastEx = ex;
+                await Task.Delay(BackoffDelay(attempt), ct);
+                continue;
+            }
+            catch (TaskCanceledException ex) when (!ct.IsCancellationRequested && attempt < maxAttempts)
+            {
+                lastEx = ex;
+                await Task.Delay(BackoffDelay(attempt), ct);
+                continue;
+            }
+        }
+
+        throw new SwishTransientException($"Request failed after {maxAttempts} attempts", null, null, lastEx);
+    }
+
+    private static TimeSpan BackoffDelay(int attempt)
+    {
+        var baseMs = 200 * (int)Math.Pow(2, attempt - 1);
+        var jitter = Random.Shared.Next(0, 100);
+        return TimeSpan.FromMilliseconds(baseMs + jitter);
+    }
+
+    // ======================== /Policy-helper ======================================
+
+    // === Exempelmetod (demo) ===
     public async Task<string> PingAsync(CancellationToken ct = default)
     {
         _logger?.LogInformation("Calling Ping endpoint...");
@@ -51,74 +168,39 @@ public sealed class SwishClient : ISwishClient
         return payload;
     }
 
-    // --- Payments ---
+    // === ISwishClient-implementation (payments) ===
     public async Task<CreatePaymentResponse> CreatePaymentAsync(CreatePaymentRequest request, CancellationToken ct = default)
     {
-        var url = _options.PaymentsPath;
-        _logger?.LogInformation("POST {Url}", url);
-
-        using var res = await _http.PostAsJsonAsync(url, request, ct);
-        if (!res.IsSuccessStatusCode)
+        var json = JsonSerializer.Serialize(request, _json);
+        using var msg = new HttpRequestMessage(HttpMethod.Post, "/payments")
         {
-            var err = await res.Content.ReadAsStringAsync(ct);
-            throw new HttpRequestException($"Swish CreatePayment failed: {(int)res.StatusCode} {res.ReasonPhrase}. Body: {err}");
-        }
-
-        var payload = await res.Content.ReadFromJsonAsync<CreatePaymentResponse>(cancellationToken: ct)
-                      ?? throw new InvalidOperationException("Empty CreatePaymentResponse");
-        return payload;
+            Content = new StringContent(json, Encoding.UTF8, "application/json")
+        };
+        return await SendWithPolicyAsync<CreatePaymentResponse>(msg, isCreate: true, ct);
     }
 
+    // OBS: matchar ditt interface (returnerar CreatePaymentResponse)
     public async Task<CreatePaymentResponse> GetPaymentStatusAsync(string paymentId, CancellationToken ct = default)
     {
-        var url = $"{_options.PaymentsPath}/{paymentId}";
-        _logger?.LogInformation("GET {Url}", url);
-
-        using var res = await _http.GetAsync(url, ct);
-        if (!res.IsSuccessStatusCode)
-        {
-            var err = await res.Content.ReadAsStringAsync(ct);
-            throw new HttpRequestException($"Swish GetPaymentStatus failed: {(int)res.StatusCode} {res.ReasonPhrase}. Body: {err}");
-        }
-
-        var payload = await res.Content.ReadFromJsonAsync<CreatePaymentResponse>(cancellationToken: ct)
-                      ?? throw new InvalidOperationException("Empty GetPaymentStatus response");
-        return payload;
+        using var msg = new HttpRequestMessage(HttpMethod.Get, $"/payments/{paymentId}");
+        return await SendWithPolicyAsync<CreatePaymentResponse>(msg, isCreate: false, ct);
     }
 
-    // --- Refunds ---
+    // === ISwishClient-implementation (refunds) ===
     public async Task<CreateRefundResponse> CreateRefundAsync(CreateRefundRequest request, CancellationToken ct = default)
     {
-        var url = _options.RefundsPath;
-        _logger?.LogInformation("POST {Url}", url);
-
-        using var res = await _http.PostAsJsonAsync(url, request, ct);
-        if (!res.IsSuccessStatusCode)
+        var json = JsonSerializer.Serialize(request, _json);
+        using var msg = new HttpRequestMessage(HttpMethod.Post, "/refunds")
         {
-            var err = await res.Content.ReadAsStringAsync(ct);
-            throw new HttpRequestException($"Swish CreateRefund failed: {(int)res.StatusCode} {res.ReasonPhrase}. Body: {err}");
-        }
-
-        var payload = await res.Content.ReadFromJsonAsync<CreateRefundResponse>(cancellationToken: ct)
-                      ?? throw new InvalidOperationException("Empty CreateRefundResponse");
-        return payload;
+            Content = new StringContent(json, Encoding.UTF8, "application/json")
+        };
+        return await SendWithPolicyAsync<CreateRefundResponse>(msg, isCreate: true, ct);
     }
 
+    // OBS: matchar ditt interface (returnerar CreateRefundResponse)
     public async Task<CreateRefundResponse> GetRefundStatusAsync(string refundId, CancellationToken ct = default)
     {
-        var url = $"{_options.RefundsPath}/{refundId}";
-        _logger?.LogInformation("GET {Url}", url);
-
-        using var res = await _http.GetAsync(url, ct);
-        if (!res.IsSuccessStatusCode)
-        {
-            var err = await res.Content.ReadAsStringAsync(ct);
-            throw new HttpRequestException($"Swish GetRefundStatus failed: {(int)res.StatusCode} {res.ReasonPhrase}. Body: {err}");
-        }
-
-        var payload = await res.Content.ReadFromJsonAsync<CreateRefundResponse>(cancellationToken: ct)
-                      ?? throw new InvalidOperationException("Empty GetRefundStatus response");
-        return payload;
+        using var msg = new HttpRequestMessage(HttpMethod.Get, $"/refunds/{refundId}");
+        return await SendWithPolicyAsync<CreateRefundResponse>(msg, isCreate: false, ct);
     }
 }
-
