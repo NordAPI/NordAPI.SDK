@@ -1,84 +1,122 @@
-\# NordAPI.Swish SDK (MVP)
 
+# NordAPI.Swish SDK (MVP)
 
+Ett lättviktigt och säkert .NET SDK för att integrera Swish-betalningar och återköp i test- och utvecklingsmiljöer.  
+Stöd för HMAC-autentisering, mTLS och hastighetsbegränsning ingår som standard.
 
-En enkel .NET SDK för Swish (test-/dev-läge) med HMAC, Rate Limiting och mTLS-stöd.
+---
 
+## 🚀 Funktioner
 
+- ✅ Skapa och verifiera Swish-betalningar  
+- 🔁 Stöd för återköp  
+- 🔐 HMAC + mTLS-stöd  
+- 📉 Hastighetsbegränsning  
+- 🧪 ASP.NET Core-integration  
+- 🧰 Miljövariabelhantering
 
-\## Quickstart
+---
 
-
+## ⚡ Snabbstart
 
 ```csharp
-
 using NordAPI.Swish;
 
-
-
-// 1) Skapa HttpClient via SDK:ns pipeline (HMAC + RateLimit + mTLS-stöd)
-
+// Skapa HttpClient med HMAC, RateLimit och mTLS
 var http = SwishClient.CreateHttpClient(
-
-    baseAddress: new Uri("https://example.test"),           // byt till rätt base URL
-
-    apiKey: Environment.GetEnvironmentVariable("SWISH\_API\_KEY") ?? "dev-key",
-
-    secret: Environment.GetEnvironmentVariable("SWISH\_API\_SECRET") ?? "dev-secret",
-
+    baseAddress: new Uri("https://example.test"),
+    apiKey: Environment.GetEnvironmentVariable("SWISH_API_KEY") ?? "dev-key",
+    secret: Environment.GetEnvironmentVariable("SWISH_SECRET") ?? "dev-secret",
     innerHandler: null,
-
     certOptions: new SwishCertificateOptions {
-
-        // Dessa env-variabler sätts i CI när (och bara när) secrets finns
-
-        PfxPath = Environment.GetEnvironmentVariable("SWISH\_PFX\_PATH"),
-
-        PfxPassword = Environment.GetEnvironmentVariable("SWISH\_PFX\_PASSWORD")
-
+        PfxPath = Environment.GetEnvironmentVariable("SWISH_PFX_PATH"),
+        PfxPassword = Environment.GetEnvironmentVariable("SWISH_PFX_PASSWORD")
     },
-
-    allowInvalidChainForDev: true // ENDAST lokalt/dev
-
+    allowInvalidChainForDev: true // Endast för lokal utveckling
 );
-
-
-
-// 2) Skapa klienten
 
 var swish = new SwishClient(http);
 
-
-
-// 3) Exempel: skapa betalning
-
-var create = new CreatePaymentRequest(
-
-    Amount: 100.00m,
-
-    Currency: "SEK",
-
-    PayerAlias: "46701234567",
-
-    Message: "Testköp"
-
-);
-
+// Skapa betalning
+var create = new CreatePaymentRequest(100.00m, "SEK", "46701234567", "Testköp");
 var payment = await swish.CreatePaymentAsync(create);
 
-
-
-// 4) Hämta status
-
+// Kontrollera status
 var status = await swish.GetPaymentStatusAsync(payment.Id);
 
-
-
-// 5) Återbetalning (exempel)
-
+// Återköp
 var refund = await swish.CreateRefundAsync(new CreateRefundRequest(payment.Id, 100.00m, "SEK", "Retur"));
-
 var refundStatus = await swish.GetRefundStatusAsync(refund.Id);
+```
+
+---
+
+## 🌐 ASP.NET Core-integration
+
+```csharp
+using NordAPI.Swish;
+using NordAPI.Swish.DependencyInjection;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddSwishClient(opts =>
+{
+    opts.BaseAddress = new Uri(Environment.GetEnvironmentVariable("SWISH_BASE_URL")
+        ?? throw new InvalidOperationException("Saknar SWISH_BASE_URL"));
+    opts.ApiKey = Environment.GetEnvironmentVariable("SWISH_API_KEY")
+        ?? throw new InvalidOperationException("Saknar SWISH_API_KEY"));
+    opts.Secret = Environment.GetEnvironmentVariable("SWISH_SECRET")
+        ?? throw new InvalidOperationException("Saknar SWISH_SECRET"));
+});
+
+var app = builder.Build();
+
+app.MapGet("/ping", async (ISwishClient swish) => await swish.PingAsync());
+
+app.Run();
+```
+
+---
+
+## 🔧 Miljövariabler
+
+| Variabel             | Beskrivning                         |
+|----------------------|-------------------------------------|
+| `SWISH_BASE_URL`     | Bas-URL för Swish API               |
+| `SWISH_API_KEY`      | API-nyckel för HMAC-autentisering   |
+| `SWISH_SECRET`       | Delad nyckel för HMAC               |
+| `SWISH_PFX_PATH`     | Sökväg till klientcertifikat (.pfx) |
+| `SWISH_PFX_PASSWORD` | Lösenord för certifikatet           |
+
+> Hårdkoda aldrig hemligheter. Använd miljövariabler, Secret Manager eller GitHub Actions Secrets.
+
+---
+
+## 🧪 Exempelprojekt
+
+Se `samples/SwishSample.Web` för ett körbart exempel:
+
+- `GET /health` → OK
+- `GET /di-check` → Verifierar DI-konfiguration
+- `GET /ping` → Mockat svar (ingen riktig HTTP)
+
+Byt ut mot riktiga miljövariabler och aktivera `PingAsync()` för integrationstester.
+
+---
+
+## 🔐 mTLS-stöd
+
+// Om din miljö kräver klientcertifikat:
+
+```csharp
+using System.Security.Cryptography.X509Certificates;
+
+var cert = new X509Certificate2("sökväg/till/certifikat.pfx", "lösenord");
+builder.Services.AddSwishClient(opts => { /* … */ }, clientCertificate: cert);
+```
+
+
+---
 
 
 
