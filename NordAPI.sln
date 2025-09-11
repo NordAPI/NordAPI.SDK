@@ -11,6 +11,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{17E224F9
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NordAPI.Swish.Tests", "tests\NordAPI.Swish.Tests\NordAPI.Swish.Tests.csproj", "{1076F587-D9FD-4F49-A93F-7E8530FF39D4}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{150AD144-8AA0-4A8D-82C9-FCEE1B7E0FFF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SwishSample.Web", "samples\SwishSample.Web\SwishSample.Web.csproj", "{05332D7C-B26F-4127-AEBD-8CBC193D38D6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -28,9 +32,14 @@ Global
 		{1076F587-D9FD-4F49-A93F-7E8530FF39D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1076F587-D9FD-4F49-A93F-7E8530FF39D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1076F587-D9FD-4F49-A93F-7E8530FF39D4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05332D7C-B26F-4127-AEBD-8CBC193D38D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05332D7C-B26F-4127-AEBD-8CBC193D38D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05332D7C-B26F-4127-AEBD-8CBC193D38D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05332D7C-B26F-4127-AEBD-8CBC193D38D6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{76F35990-40FF-4BA4-9331-65B6AF64107B} = {DFE0F325-C4EE-4F73-9980-0004D3A5BE82}
 		{1076F587-D9FD-4F49-A93F-7E8530FF39D4} = {17E224F9-A957-4677-B540-E070A125A2B3}
+		{05332D7C-B26F-4127-AEBD-8CBC193D38D6} = {150AD144-8AA0-4A8D-82C9-FCEE1B7E0FFF}
 	EndGlobalSection
 EndGlobal
