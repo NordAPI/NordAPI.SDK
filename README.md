@@ -106,7 +106,7 @@ Byt ut mot riktiga miljövariabler och aktivera `PingAsync()` för integrationst
 
 ## 🔐 mTLS-stöd
 
-// Om din miljö kräver klientcertifikat:
+ Om din miljö kräver klientcertifikat:
 
 ```csharp
 using System.Security.Cryptography.X509Certificates;
