@@ -1,20 +1,67 @@
-﻿name: CI
+﻿name: .NET CI
+
 on:
   push:
-    branches: [ main, dev, 'feature/**' ]
+    branches: [ "**" ]
+    tags:     [ "v*.*.*" ]   # t.ex. v0.1.0
   pull_request:
-    branches: [ main, dev ]
+    branches: [ "main" ]
+
 jobs:
-  build-test:
+  build-test:   # ← behåll detta id exakt (krävs av din branch protection)
+    name: Build & Test
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: "8.0.x"
+
       - name: Restore
-        run: dotnet restore NordAPI.sln
-      - name: Build
-        run: dotnet build NordAPI.sln --configuration Release --no-restore
-      - name: Test
-        run: dotnet test NordAPI.sln --configuration Release --no-build --logger "trx;LogFileName=test-results.trx"
+        run: dotnet restore ./NordAPI.sln
+
+      - name: Build (Release)
+        run: dotnet build ./NordAPI.sln -c Release --no-restore
+
+      - name: Test (Release)
+        run: dotnet test ./NordAPI.sln -c Release --no-build --logger "trx;LogFileName=test-results.trx"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            **/TestResults/*.trx
+            **/TestResults/**/*.trx
+
+  pack:
+    name: Pack on tag
+    needs: build-test
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        run: dotnet restore ./NordAPI.sln
+
+      - name: Pack (Release)
+        run: dotnet pack ./src/NordAPI.Swish/NordAPI.Swish.csproj -c Release -o ./artifacts /p:ContinuousIntegrationBuild=true
+
+      - name: Upload NuGet package
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-package
+          path: artifacts/*.nupkg
