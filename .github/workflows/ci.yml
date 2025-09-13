@@ -3,12 +3,12 @@
 on:
   push:
     branches: [ "**" ]
-    tags:     [ "v*.*.*" ]   # t.ex. v0.1.0
+    tags:     [ "v*.*.*" ]   # t.ex. v1.0.2
   pull_request:
     branches: [ "main" ]
 
 jobs:
-  build-test:   # ← behåll detta id exakt (krävs av din branch protection)
+  build-test:   # behåll detta id – används av branch protection
     name: Build & Test
     runs-on: ubuntu-latest
 
@@ -40,7 +40,7 @@ jobs:
             **/TestResults/**/*.trx
 
   pack:
-    name: Pack on tag
+    name: Pack & Publish on tag
     needs: build-test
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
@@ -57,11 +57,25 @@ jobs:
       - name: Restore
         run: dotnet restore ./NordAPI.sln
 
+      - name: Build (Release)
+        run: dotnet build ./NordAPI.sln -c Release --no-restore
+
       - name: Pack (Release)
         run: dotnet pack ./src/NordAPI.Swish/NordAPI.Swish.csproj -c Release -o ./artifacts /p:ContinuousIntegrationBuild=true
 
-      - name: Upload NuGet package
+      - name: Publish nupkg to NuGet
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: dotnet nuget push "artifacts/*.nupkg" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+      - name: Publish symbols to NuGet
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: dotnet nuget push "artifacts/*.snupkg" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+      - name: Upload artifacts (reference)
         uses: actions/upload-artifact@v4
         with:
-          name: nuget-package
-          path: artifacts/*.nupkg
+          name: packages
+          path: artifacts/*
+
