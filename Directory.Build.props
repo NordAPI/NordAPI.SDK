@@ -10,7 +10,10 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>swish;payments;sdk;nordapi</PackageTags>
 
+    <!-- Huvudbiblioteket får XML-doc (bra för NuGet) -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!-- Symbols -->
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
 
@@ -24,5 +27,10 @@
 
     <!-- VERSION FÖR DENNA RELEASE -->
     <Version>1.0.2</Version>
+  </PropertyGroup>
+
+  <!-- Tysta CS1591-varningar i Debug globalt (lämna dem i Release/CI) -->
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
 </Project>

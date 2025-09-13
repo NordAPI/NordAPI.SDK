@@ -11,4 +11,10 @@
     <ProjectReference Include="..\..\src\NordAPI.Swish\NordAPI.Swish.csproj" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+
 </Project>
