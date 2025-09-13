@@ -1,4 +1,4 @@
-﻿<Project>
+<Project>
   <PropertyGroup>
     <Company>NordAPI</Company>
     <Authors>NordAPI</Authors>
@@ -14,10 +14,15 @@
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
 
+    <!-- README visas på NuGet; själva filen packas via .csproj -->
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <!-- Bygg-kvalitet -->
     <Deterministic>true</Deterministic>
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 
-    <Version>1.0.1</Version>
+    <!-- VERSION FÖR DENNA RELEASE -->
+    <Version>1.0.2</Version>
   </PropertyGroup>
 </Project>
