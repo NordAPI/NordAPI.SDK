@@ -6,6 +6,7 @@ on:
     tags:     [ "v*.*.*" ]   # t.ex. v1.0.2
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch: {}       # gör att du kan köra den manuellt i Actions
 
 jobs:
   build-test:   # behåll detta id – används av branch protection
@@ -40,9 +41,10 @@ jobs:
             **/TestResults/**/*.trx
 
   pack:
-    name: Pack & Publish on tag
+    name: Pack & Publish (tag or manual)
     needs: build-test
-    if: startsWith(github.ref, 'refs/tags/v')
+    # Kör vid tagg OCH vid manuell start. Begränsa manuell till main.
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
 
     steps:
