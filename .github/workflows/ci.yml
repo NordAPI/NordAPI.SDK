@@ -1,12 +1,12 @@
-﻿name: .NET CI
+name: .NET CI
 
 on:
   push:
     branches: [ "**" ]
-    tags:     [ "v*.*.*" ]   # t.ex. v1.0.2
+    tags: [ "v*.*.*" ]   # t.ex. v1.0.2
   pull_request:
     branches: [ "main" ]
-  workflow_dispatch: {}       # gör att du kan köra den manuellt i Actions
+  workflow_dispatch: {}   # tillåter manuell körning från Actions
 
 jobs:
   build-test:   # behåll detta id – används av branch protection
@@ -80,4 +80,3 @@ jobs:
         with:
           name: packages
           path: artifacts/*
-
