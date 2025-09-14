@@ -2,11 +2,11 @@
 
 on:
   push:
-    branches: ["**"]
-    tags: ["v*.*.*"]   # t.ex. v1.0.2
+    branches: [ "**" ]
+    tags: [ "v*.*.*" ]   # t.ex. v1.0.2
   pull_request:
-    branches: ["main"]
-  workflow_dispatch: {}  # tillåter manuell körning från Actions
+    branches: [ "main" ]
+  workflow_dispatch: {}   # tillåter manuell körning från Actions
 
 jobs:
   build-test:   # behåll detta id – används av branch protection
@@ -68,17 +68,16 @@ jobs:
       - name: Publish nupkg to NuGet
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-        run: dotnet nuget push "artifacts/*.nupkg" --api-key "$NUGET_API_KEY" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
+        run: dotnet nuget push "artifacts/*.nupkg" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
 
       - name: Publish symbols to NuGet
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-        run: dotnet nuget push "artifacts/*.snupkg" --api-key "$NUGET_API_KEY" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
+        run: dotnet nuget push "artifacts/*.snupkg" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
 
-      - name: Upload packages (reference)
+      - name: Upload artifacts (reference)
         uses: actions/upload-artifact@v4
         with:
           name: packages
           path: artifacts/*
-
 
