@@ -23,5 +23,5 @@ jobs:
       - run: dotnet pack -c Release -o out /p:ContinuousIntegrationBuild=true
       - name: Push to NuGet.org
         env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}  # lämnas tomt tills NI vill lansera
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}  # lämnas tomt tills ni VILL lansera
         run: dotnet nuget push "out/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key "$NUGET_API_KEY" --skip-duplicate
