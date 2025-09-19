@@ -1,15 +1,29 @@
-﻿# Normalize all text files (commit as LF, checkout native on Windows)
+﻿# Normalize line endings: keep LF in repo, checkout native endings
 * text=auto
 
-# Explicit for common file types
-*.cs     text diff=csharp
-*.csproj text
-*.sln    text eol=crlf
-*.md     text
-*.yml    text
-*.yaml   text
-*.json   text
-*.ps1    text
-*.psm1   text
-*.cmd    text eol=crlf
-*.bat    text eol=crlf
+# Mark common text files explicitly (optional clarity)
+*.cs      text
+*.csproj  text
+*.sln     text
+*.props   text
+*.targets text
+*.json    text
+*.yml     text
+*.yaml    text
+*.md      text
+*.ps1     text
+*.sh      text
+*.ts      text
+*.tsx     text
+*.js      text
+*.css     text
+*.html    text
+
+# Binary files (never convert line endings)
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.pdf   binary
+*.snk   binary
