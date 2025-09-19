@@ -113,3 +113,28 @@ dotnet watch --project samples/SwishSample.Web run
 ```
 
 ---
+
+## Alternativ: ISO-8601-timestamp
+```powershell
+$secret   = "dev_secret"
+$bodyJson = '{"id":"test-1","amount":100}'
+$tsIso    = [DateTimeOffset]::UtcNow.ToUniversalTime().ToString("o")
+$nonce    = [guid]::NewGuid().ToString("N")
+
+$message  = "{0}`n{1}`n{2}" -f $tsIso, $nonce, $bodyJson
+
+$key    = [Text.Encoding]::UTF8.GetBytes($secret)
+$hmac   = [System.Security.Cryptography.HMACSHA256]::new($key)
+$sigB64 = [Convert]::ToBase64String($hmac.ComputeHash([Text.Encoding]::UTF8.GetBytes($message)))
+
+$curl = "$env:SystemRoot\System32\curl.exe"
+$uri  = "http://localhost:5287/webhook/swish"
+
+& $curl -i -X POST $uri `
+  -H "Content-Type: application/json" `
+  -H "X-Swish-Timestamp: $tsIso" `
+  -H "X-Swish-Nonce: $nonce" `
+  -H "X-Swish-Signature: $sigB64" `
+  -d $bodyJson
+  ```
+  ---
