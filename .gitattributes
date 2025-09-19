@@ -1,0 +1,15 @@
+﻿# Normalize all text files (commit as LF, checkout native on Windows)
+* text=auto
+
+# Explicit for common file types
+*.cs     text diff=csharp
+*.csproj text
+*.sln    text eol=crlf
+*.md     text
+*.yml    text
+*.yaml   text
+*.json   text
+*.ps1    text
+*.psm1   text
+*.cmd    text eol=crlf
+*.bat    text eol=crlf
