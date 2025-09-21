@@ -14,6 +14,14 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
+  <!-- Tysta CS1591 endast i Debug så dotnet watch inte spam:ar. Release oförändrad. -->
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <NoWarn>$(NoWarn);1591</NoWarn>
+    <!-- Alternativ om du föredrar: slå av XML-doc helt i Debug
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    -->
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.8" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.8" />
