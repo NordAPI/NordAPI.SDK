@@ -1,29 +1,23 @@
-﻿# Normalize line endings: keep LF in repo, checkout native endings
+﻿# Normalize line endings by default
 * text=auto
 
-# Mark common text files explicitly (optional clarity)
-*.cs      text
-*.csproj  text
-*.sln     text
-*.props   text
-*.targets text
-*.json    text
-*.yml     text
-*.yaml    text
-*.md      text
-*.ps1     text
-*.sh      text
-*.ts      text
-*.tsx     text
-*.js      text
-*.css     text
-*.html    text
+# Windows-friendly text files (CRLF in working tree)
+*.sln      text eol=crlf
+*.cs       text eol=crlf
+*.csproj   text eol=crlf
+*.props    text eol=crlf
+*.targets  text eol=crlf
+*.bat      text eol=crlf
+*.ps1      text eol=crlf
 
-# Binary files (never convert line endings)
-*.png   binary
-*.jpg   binary
-*.jpeg  binary
-*.gif   binary
-*.ico   binary
-*.pdf   binary
-*.snk   binary
+# Unix scripts (LF)
+*.sh       text eol=lf
+
+# Keep binaries untouched
+*.png      binary
+*.jpg      binary
+*.jpeg     binary
+*.gif      binary
+*.pdf      binary
+*.pfx      binary
+*.cer      binary
