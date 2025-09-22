@@ -1,12 +1,18 @@
-﻿bin/
+﻿# Build-output
+bin/
 obj/
+
+# IDE
 .vscode/
 .vs/
 *.user
 *.suo
+
+# Test-output
 TestResults/
 coveragereport/
-# cert
+
+# Certifikat (ska aldrig in i repo)
 *.pfx
 *.p12
 *.pem
@@ -14,6 +20,11 @@ coveragereport/
 *.crt
 *.cer
 
-
-
+# Lokala hjälpfiler
 body.json
+
+# Artifacts från packning/CI – ignorera allt men behåll mappen
+artifacts/**
+!artifacts/README.md
+!artifacts/.gitkeep
+
