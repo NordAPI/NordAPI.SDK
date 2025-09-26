@@ -104,6 +104,33 @@ Byt ut mot riktiga miljövariabler och aktivera `PingAsync()` för integrationst
 
 ---
 
+### 🔧 Röktest av webhook (endast för lokal utveckling)
+
+SDK:t innehåller ett enkelt röktest för att verifiera att webhook-signering fungerar lokalt.
+
+1. Starta sample-servern med hemlighet:
+   ```powershell
+   $env:SWISH_WEBHOOK_SECRET = "dev_secret"
+   $env:SWISH_DEBUG = "1"
+   dotnet watch run --project .\samples\SwishSample.Web\SwishSample.Web.csproj
+   ```
+
+2.  Kör röktestet
+    ```powershell
+    .\scripts\smoke-webhook.ps1 -Secret dev_secret -Replay
+    ```
+
+3. Förväntat resultat:
+
+Första request → {"received":true} (kan visas som True i PowerShell).
+
+Andra request (replay) → 401 med {"reason":"replay upptäckt (nonce sedd tidigare)"}.
+
+(Obs: Detta är ett utvecklarverktyg. Riktiga Swish-callbackar skickar inte dessa HMAC-headers. I produktion används en separat verifieringsmekanism.) 
+
+
+---
+
 ## 🔐 mTLS-stöd
 
  Om din miljö kräver klientcertifikat:
