@@ -14,10 +14,9 @@ jobs:
       DOTNET_NOLOGO: true
       DOTNET_CLI_TELEMETRY_OPTOUT: true
       ASPNETCORE_ENVIRONMENT: Development
-      # Lås porten så scriptet vet vart det ska pinga
-      ASPNETCORE_URLS: http://localhost:5055
       SWISH_WEBHOOK_SECRET: dev_secret
       SWISH_DEBUG: "1"
+      FIXED_URL: "http://localhost:5055"
 
     steps:
       - name: Checkout
@@ -34,50 +33,82 @@ jobs:
           dotnet restore
           dotnet build --configuration Debug --nologo
 
-      - name: Start sample server (background)
+      - name: Start sample server (background process)
+        id: start_sample
         shell: pwsh
         run: |
           $proj = ".\samples\SwishSample.Web\SwishSample.Web.csproj"
           $log  = "$env:RUNNER_TEMP\sample-log.txt"
-          # Starta i bakgrunden och logga utdata
-          Start-Job -Name SwishSample `
-            -ScriptBlock {
-              param($p,$l)
-              $env:ASPNETCORE_ENVIRONMENT = "Development"
-              $env:ASPNETCORE_URLS        = "http://localhost:5055"
-              $env:SWISH_WEBHOOK_SECRET   = "dev_secret"
-              $env:SWISH_DEBUG            = "1"
-              dotnet run --project $p *>&1 | Tee-Object -FilePath $l
-            } -ArgumentList $proj,$log | Out-Null
 
-          # Vänta tills /health svarar (timeout ~30s)
+          # Starta som separat process och få tillbaka PID
+          $psi = New-Object System.Diagnostics.ProcessStartInfo
+          $psi.FileName = "dotnet"
+          $psi.Arguments = "run --project `"$proj`" --urls `"$env:FIXED_URL`""
+          $psi.RedirectStandardOutput = $true
+          $psi.RedirectStandardError  = $true
+          $psi.UseShellExecute = $false
+          $proc = New-Object System.Diagnostics.Process
+          $proc.StartInfo = $psi
+          $null = $proc.Start()
+
+          # Streama loggar till fil asynkront
+          $out = $proc.StandardOutput.ReadToEndAsync()
+          $err = $proc.StandardError.ReadToEndAsync() | Out-Null
+          Start-Job -Name LogDrain -ScriptBlock {
+            param($task, $path)
+            $content = $task.GetAwaiter().GetResult()
+            [IO.File]::WriteAllText($path, $content)
+          } -ArgumentList $out, $log | Out-Null
+
+          # Spara PID och loggväg för senare steg
+          "PID=$($proc.Id)"    >> $env:GITHUB_OUTPUT
+          "LOG=$log"           >> $env:GITHUB_OUTPUT
+          "URL=$env:FIXED_URL" >> $env:GITHUB_OUTPUT
+
+          # Vänta tills /health svarar (timeout ~45s)
           $ok = $false
-          for ($i=0; $i -lt 30; $i++) {
+          for ($i=0; $i -lt 45; $i++) {
             try {
-              $resp = Invoke-RestMethod -Uri "http://localhost:5055/health" -TimeoutSec 2 -ErrorAction Stop
+              $resp = Invoke-RestMethod -Uri "$($env:FIXED_URL)/health" -TimeoutSec 2 -ErrorAction Stop
               if ($resp -eq "ok") { $ok = $true; break }
             } catch { Start-Sleep -Seconds 1 }
           }
           if (-not $ok) {
-            Write-Host "Sample did not become healthy. Log:"
-            Get-Content $log -Raw | Write-Host
+            Write-Host "Sample did not become healthy. Current log:"
+            if (Test-Path $log) { Get-Content $log -Raw | Write-Host }
             throw "Sample not healthy"
           }
-          Write-Host "Sample is healthy."
+          Write-Host "Sample is healthy at $env:FIXED_URL"
 
       - name: Run smoke script (OK + replay -> 401)
         shell: pwsh
         run: |
-          # Kör vårt repo-script mot låst URL
-          .\scripts\smoke-webhook.ps1 -Url "http://localhost:5055/webhook/swish" -Secret "dev_secret" -Replay
+          # Bypass execution policy för att säkert kunna köra vårt script
+          Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
+          .\scripts\smoke-webhook.ps1 -Url "${{ steps.start_sample.outputs.URL }}/webhook/swish" -Secret "dev_secret" -Replay
+
+      - name: Print sample log on failure
+        if: failure()
+        shell: pwsh
+        run: |
+          $log = "${{ steps.start_sample.outputs.LOG }}"
+          if (Test-Path $log) {
+            Write-Host "---- SAMPLE LOG BEGIN ----"
+            Get-Content $log -Raw | Write-Host
+            Write-Host "---- SAMPLE LOG END ----"
+          } else {
+            Write-Host "No sample log found."
+          }
 
       - name: Stop sample server
         if: always()
         shell: pwsh
         run: |
-          $job = Get-Job -Name SwishSample -ErrorAction SilentlyContinue
+          $pid = "${{ steps.start_sample.outputs.PID }}"
+          if ($pid) {
+            try { Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue } catch {}
+          }
+          $job = Get-Job -Name LogDrain -ErrorAction SilentlyContinue
           if ($job) {
-            Stop-Job $job -Force
-            Receive-Job $job -Keep | Out-Null
-            Remove-Job $job
+            try { Receive-Job $job -Wait -AutoRemoveJob | Out-Null } catch {}
           }
