@@ -1,9 +1,13 @@
-﻿## Vad
-## Varför
-## Hur testas
-- [ ] Enhetstester
-- [ ] Manuell verifikation
+﻿## What
+Describe the changes introduced in this pull request.
 
-## Checklista
-- [ ] Ingen breaking change utan major bump
-- [ ] README uppdaterad vid behov
+## Why
+Explain the motivation behind these changes.
+
+## How to test
+- [ ] Unit tests
+- [ ] Manual verification
+
+## Checklist
+- [ ] No breaking changes without a major version bump
+- [ ] README updated if necessary
