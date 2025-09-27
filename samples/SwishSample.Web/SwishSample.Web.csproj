@@ -11,6 +11,10 @@
     <ProjectReference Include="..\..\src\NordAPI.Swish\NordAPI.Swish.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="StackExchange.Redis" Version="2.*" />
+  </ItemGroup>
+
   <PropertyGroup>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);CS1591</NoWarn>

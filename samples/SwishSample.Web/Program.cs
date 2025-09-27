@@ -1,3 +1,5 @@
+using StackExchange.Redis;
+using SwishSample.Web.Security;
 using System.Globalization;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
@@ -38,6 +40,16 @@ builder.Services.AddSingleton(sp =>
     };
     return new SwishWebhookVerifier(opts, nonces);
 });
+
+// ===== [4.2] Redis (valfritt) =============================================
+// Aktivera genom SWISH_REDIS=1; anslutning via SWISH_REDIS_CONN (default "localhost:6379")
+var useRedis = string.Equals(Environment.GetEnvironmentVariable("SWISH_REDIS"), "1", StringComparison.Ordinal);
+if (useRedis)
+{
+    var connStr = Environment.GetEnvironmentVariable("SWISH_REDIS_CONN") ?? "localhost:6379";
+    builder.Services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(connStr));
+}
+// ==========================================================================
 
 var app = builder.Build();
 
@@ -120,6 +132,24 @@ app.MapPost("/webhook/swish", async (
             ? Results.Json(payload, statusCode: 401)
             : Results.Unauthorized();
     }
+
+    // ===== [4.3] Redis-gate (persistant anti-replay) =======================
+    // Kör före signaturverifiering. Aktiveras bara om IConnectionMultiplexer finns registrerad.
+    IConnectionMultiplexer? redis = null;
+    try { redis = req.HttpContext.RequestServices.GetService<IConnectionMultiplexer>(); } catch { /* ignore */ }
+
+    if (redis is not null && !string.IsNullOrWhiteSpace(nonce))
+    {
+        // TTL = skew-fönster + liten marginal
+        var ttl = TimeSpan.FromMinutes(5) + TimeSpan.FromSeconds(30);
+        var isNew = await RedisReplayGate.TryRegisterNonceAsync(redis, "swish:nonce", nonce, ttl);
+        if (!isNew)
+        {
+            var payload = new { reason = "replay-detected (redis)" };
+            return Results.Json(payload, statusCode: 401);
+        }
+    }
+    // =======================================================================
 
     var canonical = $"{tsHeader}\n{nonce}\n{rawBody}";
     if (isDebug)
