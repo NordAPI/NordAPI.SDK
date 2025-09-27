@@ -7,7 +7,7 @@ using NordAPI.Swish.Security.Webhooks;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1) Swish SDK-klient i DI (mockade värden i sample)
+// Swish SDK-klient (mockade värden i sample)
 builder.Services.AddSwishClient(opts =>
 {
     opts.BaseAddress = new Uri(
@@ -19,10 +19,10 @@ builder.Services.AddSwishClient(opts =>
                   ?? "dev-secret";
 });
 
-// 2) Replay-skydd (nonce-store)
+// Replay-skydd (nonce-store)
 builder.Services.AddSingleton<ISwishNonceStore, InMemoryNonceStore>();
 
-// 3) Webhook verifierare – läs hemlig nyckel från env/konfig
+// Webhook verifierare – läs hemlig nyckel från env/konfig
 builder.Services.AddSingleton(sp =>
 {
     var cfg    = sp.GetRequiredService<IConfiguration>();
@@ -41,7 +41,6 @@ builder.Services.AddSingleton(sp =>
 
 var app = builder.Build();
 
-// Bas-endpoints
 app.MapGet("/", () =>
     "Swish sample is running. Try /health, /di-check, /ping, or POST /webhook/swish").AllowAnonymous();
 app.MapGet("/health", () => "ok").AllowAnonymous();
@@ -49,7 +48,6 @@ app.MapGet("/di-check", (ISwishClient swish) =>
     swish is not null ? "ISwishClient is registered" : "not found").AllowAnonymous();
 app.MapGet("/ping", () => Results.Ok("pong (mocked)")).AllowAnonymous();
 
-// 📬 Webhook: verifiera signatur mot RÅ body (exakt textinnehåll)
 app.MapPost("/webhook/swish", async (
     HttpRequest req,
     [FromServices] SwishWebhookVerifier verifier) =>
@@ -61,13 +59,11 @@ app.MapPost("/webhook/swish", async (
 
     req.EnableBuffering();
 
-    // 1) Läs RÅ body (oförändrad text)
     string rawBody;
     using (var reader = new StreamReader(req.Body, Encoding.UTF8, detectEncodingFromByteOrderMarks: false, leaveOpen: true))
         rawBody = (await reader.ReadToEndAsync()) ?? string.Empty;
     req.Body.Position = 0;
 
-    // 2) Debug: logga alla headers
     if (isDebug)
     {
         Console.WriteLine("[DEBUG] Inkommande headers:");
@@ -78,7 +74,6 @@ app.MapPost("/webhook/swish", async (
         }
     }
 
-    // 3) Läs headers (Swish-variant först)
     var tsHeader  = req.Headers["X-Swish-Timestamp"].ToString();
     if (string.IsNullOrWhiteSpace(tsHeader))
         tsHeader = req.Headers["X-Timestamp"].ToString();
@@ -102,7 +97,6 @@ app.MapPost("/webhook/swish", async (
             : Results.BadRequest("Missing X-Swish-Timestamp or X-Signature");
     }
 
-    // 4) Timestamp-parse (sek/millis/ISO-8601)
     if (!TryParseTimestamp(tsHeader, out var ts))
     {
         var payload = new { reason = "bad-timestamp", tsHeader };
@@ -111,7 +105,6 @@ app.MapPost("/webhook/swish", async (
             : Results.BadRequest("Invalid X-Swish-Timestamp");
     }
 
-    // 5) Skew/age
     var now = DateTimeOffset.UtcNow;
     var skewSeconds = Math.Abs((now - ts).TotalSeconds);
     if (!allowOld && skewSeconds > TimeSpan.FromMinutes(5).TotalSeconds)
@@ -128,7 +121,6 @@ app.MapPost("/webhook/swish", async (
             : Results.Unauthorized();
     }
 
-    // 6) Canonical som VERKLIGEN används (logga den)
     var canonical = $"{tsHeader}\n{nonce}\n{rawBody}";
     if (isDebug)
     {
@@ -136,7 +128,6 @@ app.MapPost("/webhook/swish", async (
         Console.WriteLine(canonical);
     }
 
-    // 7) Verifiera signatur + anti-replay
     var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
     {
         ["X-Swish-Timestamp"] = tsHeader,
@@ -186,5 +177,4 @@ static bool TryParseTimestamp(string tsHeader, out DateTimeOffset ts)
 }
 
 public partial class Program { }
-
 
