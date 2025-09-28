@@ -19,7 +19,32 @@ builder.Services.AddSwishClient(opts =>
                   ?? "dev-key";
     opts.Secret = Environment.GetEnvironmentVariable("SWISH_SECRET")
                   ?? "dev-secret";
+
+#if !DEBUG
+    // mTLS – ladda PFX från miljövariabler (Base64 + lösenord)
+    var pfxB64 = Environment.GetEnvironmentVariable("SWISH_PFX_BASE64");
+    var pfxPwd = Environment.GetEnvironmentVariable("SWISH_PFX_PASSWORD");
+    if (string.IsNullOrWhiteSpace(pfxB64) || string.IsNullOrWhiteSpace(pfxPwd))
+        throw new InvalidOperationException("Missing SWISH_PFX_BASE64 or SWISH_PFX_PASSWORD");
+
+    var pfxBytes = Convert.FromBase64String(pfxB64);
+    var cert = new X509Certificate2(
+        pfxBytes,
+        pfxPwd,
+        X509KeyStorageFlags.EphemeralKeySet);
+
+    opts.ConfigurePrimaryHttpMessageHandler(() =>
+    {
+        var handler = new HttpClientHandler();
+        handler.ClientCertificates.Add(cert);
+        handler.SslProtocols = System.Security.Authentication.SslProtocols.Tls12 
+                             | System.Security.Authentication.SslProtocols.Tls13;
+        handler.ClientCertificateOptions = ClientCertificateOption.Manual;
+        return handler;
+    });
+#endif
 });
+
 
 // Replay-skydd (nonce-store)
 builder.Services.AddSingleton<ISwishNonceStore, InMemoryNonceStore>();
