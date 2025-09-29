@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 
-namespace NordAPI.Swish.Security.Webhooks;
+namespace NordAPI.Swish.Webhooks;
 
 public sealed class SwishWebhookVerifierOptions
 {
@@ -22,3 +22,4 @@ public sealed class SwishWebhookVerifierOptions
     /// <summary>Namn på header med unik nonce (GUID/sträng).</summary>
     public string NonceHeaderName { get; set; } = "X-Swish-Nonce";
 }
+

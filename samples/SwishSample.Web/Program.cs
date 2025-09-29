@@ -1,11 +1,11 @@
-using StackExchange.Redis;
+﻿using StackExchange.Redis;
 using SwishSample.Web.Security;
 using System.Globalization;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using NordAPI.Swish;
 using NordAPI.Swish.DependencyInjection;
-using NordAPI.Swish.Security.Webhooks;
+using NordAPI.Swish.Webhooks;
 // mTLS/HttpClient relaterat (behåll gärna dessa using när vi gör SDK-kopplingen i nästa PR)
 using System.Security.Cryptography.X509Certificates;
 using System.Net.Http;
@@ -223,3 +223,4 @@ static bool TryParseTimestamp(string tsHeader, out DateTimeOffset ts)
 }
 
 public partial class Program { }
+

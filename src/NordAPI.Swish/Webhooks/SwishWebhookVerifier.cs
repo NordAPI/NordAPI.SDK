@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace NordAPI.Swish.Security.Webhooks;
+namespace NordAPI.Swish.Webhooks;
 
 /// <summary>
 /// Verifierar Swish-webhookar.
@@ -198,3 +198,4 @@ public sealed class SwishWebhookVerifier
         public static VerifyResult Fail(string reason) => new(false, reason);
     }
 }
+

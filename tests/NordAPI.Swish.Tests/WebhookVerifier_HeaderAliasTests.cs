@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using FluentAssertions;
-using NordAPI.Swish.Security.Webhooks;
+using NordAPI.Swish.Webhooks;
 using Xunit;
 
 namespace NordAPI.Swish.Tests
@@ -67,3 +67,4 @@ namespace NordAPI.Swish.Tests
         }
     }
 }
+

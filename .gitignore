@@ -28,3 +28,4 @@ artifacts/**
 !artifacts/README.md
 !artifacts/.gitkeep
 
+NordAPI.SwishSdk/

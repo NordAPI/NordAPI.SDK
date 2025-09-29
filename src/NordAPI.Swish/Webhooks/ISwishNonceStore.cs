@@ -1,17 +1,14 @@
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace NordAPI.Swish.Webhooks;
 
+/// <summary>
+/// Stores nonces to prevent replay. Implementations must be thread-safe.
+/// Returns false if the nonce already exists and is not expired.
+/// </summary>
 public interface ISwishNonceStore
 {
-    /// <summary>
-    /// Returnerar true om noncen redan setts inom "window", annars false och markerar den som sedd.
-    /// </summary>
-    Task<bool> SeenRecentlyAsync(
-        string nonce,
-        DateTimeOffset timestamp,
-        TimeSpan window,
-        CancellationToken ct = default);
+    Task<bool> TryRememberAsync(string nonce, DateTimeOffset expiresAtUtc, CancellationToken ct = default);
 }
