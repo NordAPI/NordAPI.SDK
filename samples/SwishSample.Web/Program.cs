@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 using NordAPI.Swish;
 using NordAPI.Swish.DependencyInjection;
 using NordAPI.Swish.Security.Webhooks;
+// mTLS/HttpClient relaterat (behåll gärna dessa using när vi gör SDK-kopplingen i nästa PR)
+using System.Security.Cryptography.X509Certificates;
+using System.Net.Http;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,31 +23,19 @@ builder.Services.AddSwishClient(opts =>
     opts.Secret = Environment.GetEnvironmentVariable("SWISH_SECRET")
                   ?? "dev-secret";
 
-#if !DEBUG
-    // mTLS – ladda PFX från miljövariabler (Base64 + lösenord)
-    var pfxB64 = Environment.GetEnvironmentVariable("SWISH_PFX_BASE64");
-    var pfxPwd = Environment.GetEnvironmentVariable("SWISH_PFX_PASSWORD");
-    if (string.IsNullOrWhiteSpace(pfxB64) || string.IsNullOrWhiteSpace(pfxPwd))
-        throw new InvalidOperationException("Missing SWISH_PFX_BASE64 or SWISH_PFX_PASSWORD");
-
-    var pfxBytes = Convert.FromBase64String(pfxB64);
-    var cert = new X509Certificate2(
-        pfxBytes,
-        pfxPwd,
-        X509KeyStorageFlags.EphemeralKeySet);
-
-    opts.ConfigurePrimaryHttpMessageHandler(() =>
-    {
-        var handler = new HttpClientHandler();
-        handler.ClientCertificates.Add(cert);
-        handler.SslProtocols = System.Security.Authentication.SslProtocols.Tls12 
-                             | System.Security.Authentication.SslProtocols.Tls13;
-        handler.ClientCertificateOptions = ClientCertificateOption.Manual;
-        return handler;
-    });
-#endif
+    // ========================================================================
+    // ✅ Fallback-läge: kör utan mTLS tills vi gör korrekt HttpClientFactory-koppling.
+    // ❌ Felaktigt tidigare: opts.ConfigurePrimaryHttpMessageHandler(...) — det finns inte på SwishOptions.
+    //
+    // TODO (nästa PR):
+    //  - Flytta mTLS-wiring till riktig HttpClientFactory-kedja i SDK:t,
+    //    t.ex. builder.Services.AddHttpClient("Swish").ConfigurePrimaryHttpMessageHandler(...);
+    //  - Gör det villkorat på env (SWISH_PFX_PATH, SWISH_PFX_PASS) och slå PÅ endast när de finns.
+    //  - I Release: INTE tillåta lax validering.
+    //
+    // OBS: Du har inga cert nu; därför är fallback-läget precis vad vi vill ha.
+    // ========================================================================
 });
-
 
 // Replay-skydd (nonce-store)
 builder.Services.AddSingleton<ISwishNonceStore, InMemoryNonceStore>();
@@ -232,4 +223,3 @@ static bool TryParseTimestamp(string tsHeader, out DateTimeOffset ts)
 }
 
 public partial class Program { }
-
