@@ -31,7 +31,7 @@ public static class SwishServiceCollectionExtensions
         // Gör options tillgängliga för SwishClient-konstruktorn
         services.AddSingleton(opts);
 
-        services.AddHttpClient<ISwishClient, SwishClient>(client =>
+        services.AddHttpClient<ISwishClient, SwishClient>("Swish", (sp, client) =>
         {
             client.BaseAddress = opts.BaseAddress;
         })
