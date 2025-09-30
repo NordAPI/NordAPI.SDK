@@ -17,10 +17,10 @@ public sealed class RedisNonceStore : ISwishNonceStore, IDisposable
         _prefix = prefix;
     }
 
-    // Om du vill DI:a in multiplexer utifrån
+    // Alternativ konstruktor om du vill DI:a in multiplexer
     public RedisNonceStore(IConnectionMultiplexer mux, string prefix = "swish:nonce:")
     {
-        _mux = mux;
+        _mux = mux ?? throw new ArgumentNullException(nameof(mux));
         _prefix = prefix;
     }
 

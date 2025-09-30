@@ -1,5 +1,8 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Text;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using NordAPI.Swish;
 using NordAPI.Swish.DependencyInjection;
@@ -9,6 +12,11 @@ using System.Security.Cryptography.X509Certificates;
 using System.Net.Http;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// -------------------------------------------------------------
+// Logging (Console är default i minimal hosting; behåll standard)
+// Om du vill höja detaljnivån i dev: sätt via appsettings.Development.json
+// -------------------------------------------------------------
 
 // Swish SDK-klient (mockade värden i sample)
 builder.Services.AddSwishClient(opts =>
@@ -41,7 +49,7 @@ var redisConn =
 
 if (!string.IsNullOrWhiteSpace(redisConn))
 {
-    // Prod/test – Redis-backet nonce store
+    // Prod/test – Redis-backed nonce store
     builder.Services.AddSingleton<ISwishNonceStore>(_ =>
         new RedisNonceStore(redisConn, "swish:nonce:"));
 }
@@ -209,3 +217,4 @@ static bool TryParseTimestamp(string tsHeader, out DateTimeOffset ts)
 }
 
 public partial class Program { }
+
