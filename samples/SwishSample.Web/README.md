@@ -137,4 +137,24 @@ $uri  = "http://localhost:5287/webhook/swish"
   -H "X-Swish-Signature: $sigB64" `
   -d $bodyJson
   ```
+
+  ---
+
+### Named client (optional)
+
+Set `SWISH_USE_NAMED_CLIENT=1` in the sample to register the named HttpClient **"Swish"**.
+If `SWISH_PFX_PATH` or `SWISH_PFX_BASE64` **and** `SWISH_PFX_PASSWORD|PASS` are set, the SDK will attach a client certificate via its `MtlsHttpHandler`.
+
+- **Default/dev:** No env → unchanged behavior (no mTLS).
+- **Opt-in:** `SWISH_USE_NAMED_CLIENT=1` + cert envs → named pipeline with mTLS is used.
+- **Security:** Relaxed chain is **DEBUG-only**; **Release** is strict. Never commit certs/keys; use env/KeyVault.
+
+Example (PowerShell):
+```powershell
+$env:SWISH_USE_NAMED_CLIENT="1"
+$env:SWISH_PFX_PATH="C:\path\client.pfx"
+$env:SWISH_PFX_PASSWORD="secret"
+dotnet run --project .\samples\SwishSample.Web\SwishSample.Web.csproj
+```
+
   ---
