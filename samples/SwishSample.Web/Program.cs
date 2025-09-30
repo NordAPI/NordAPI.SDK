@@ -19,24 +19,28 @@ var builder = WebApplication.CreateBuilder(args);
 // -------------------------------------------------------------
 
 // Swish SDK-klient (mockade värden i sample)
+var useNamed = string.Equals(
+    Environment.GetEnvironmentVariable("SWISH_USE_NAMED_CLIENT"),
+    "1", StringComparison.Ordinal);
+
+if (useNamed)
+{   // Aktiverar namngiven HttpClient "Swish" (env-styrd mTLS om cert-variabler finns).
+    builder.Services.AddSwishHttpClient(); // använder vår named client "Swish" från SDK:t
+}
+
 builder.Services.AddSwishClient(opts =>
 {
-    opts.BaseAddress = new Uri(
-        Environment.GetEnvironmentVariable("SWISH_BASE_URL")
-        ?? "https://example.invalid");
-    opts.ApiKey = Environment.GetEnvironmentVariable("SWISH_API_KEY")
-                  ?? "dev-key";
-    opts.Secret = Environment.GetEnvironmentVariable("SWISH_SECRET")
-                  ?? "dev-secret";
+  opts.BaseAddress = new Uri(
+      Environment.GetEnvironmentVariable("SWISH_BASE_URL")
+      ?? "https://example.invalid");
+  opts.ApiKey = Environment.GetEnvironmentVariable("SWISH_API_KEY")
+                ?? "dev-key";
+  opts.Secret = Environment.GetEnvironmentVariable("SWISH_SECRET")
+                ?? "dev-secret";
+    // Ingen mTLS tvingas här; om du satte SWISH_USE_NAMED_CLIENT=1
+    // + cert-env (SWISH_PFX_PATH/SWISH_PFX_BASE64 + SWISH_PFX_PASSWORD|PASS)
+    // används MtlsHttpHandler via named client "Swish".
 
-    // ========================================================================
-    // ✅ Fallback-läge: kör utan mTLS tills vi gör korrekt HttpClientFactory-koppling.
-    // TODO (nästa PR):
-    //  - Flytta mTLS-wiring till riktig HttpClientFactory-kedja i SDK:t,
-    //    t.ex. builder.Services.AddHttpClient("Swish").ConfigurePrimaryHttpMessageHandler(...);
-    //  - Gör det villkorat på env (SWISH_PFX_PATH, SWISH_PFX_PASS) och slå PÅ endast när de finns.
-    //  - I Release: INTE tillåta lax validering.
-    // ========================================================================
 });
 
 // ---------------------------------------------------------------------------
