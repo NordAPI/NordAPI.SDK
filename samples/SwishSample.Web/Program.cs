@@ -1,6 +1,4 @@
-﻿using StackExchange.Redis;
-using SwishSample.Web.Security;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using NordAPI.Swish;
@@ -25,20 +23,34 @@ builder.Services.AddSwishClient(opts =>
 
     // ========================================================================
     // ✅ Fallback-läge: kör utan mTLS tills vi gör korrekt HttpClientFactory-koppling.
-    // ❌ Felaktigt tidigare: opts.ConfigurePrimaryHttpMessageHandler(...) — det finns inte på SwishOptions.
-    //
     // TODO (nästa PR):
     //  - Flytta mTLS-wiring till riktig HttpClientFactory-kedja i SDK:t,
     //    t.ex. builder.Services.AddHttpClient("Swish").ConfigurePrimaryHttpMessageHandler(...);
     //  - Gör det villkorat på env (SWISH_PFX_PATH, SWISH_PFX_PASS) och slå PÅ endast när de finns.
     //  - I Release: INTE tillåta lax validering.
-    //
-    // OBS: Du har inga cert nu; därför är fallback-läget precis vad vi vill ha.
     // ========================================================================
 });
 
-// Replay-skydd (nonce-store)
-builder.Services.AddSingleton<ISwishNonceStore, InMemoryNonceStore>();
+// ---------------------------------------------------------------------------
+// Nonce-store (replay-skydd):
+// Använd Redis om REDIS_URL eller SWISH_REDIS_CONN är satt, annars InMemory.
+// ---------------------------------------------------------------------------
+var redisConn =
+    Environment.GetEnvironmentVariable("REDIS_URL")
+    ?? Environment.GetEnvironmentVariable("SWISH_REDIS_CONN");
+
+if (!string.IsNullOrWhiteSpace(redisConn))
+{
+    // Prod/test – Redis-backet nonce store
+    builder.Services.AddSingleton<ISwishNonceStore>(_ =>
+        new RedisNonceStore(redisConn, "swish:nonce:"));
+}
+else
+{
+    // Dev fallback – InMemory (med TTL-scavenging)
+    builder.Services.AddSingleton<ISwishNonceStore>(_ =>
+        new InMemoryNonceStore(TimeSpan.FromMinutes(5)));
+}
 
 // Webhook verifierare – läs hemlig nyckel från env/konfig
 builder.Services.AddSingleton(sp =>
@@ -54,18 +66,10 @@ builder.Services.AddSingleton(sp =>
     {
         SharedSecret = secret
     };
+
+    // OBS: Vi utgår från din nuvarande signatur: (options, nonceStore)
     return new SwishWebhookVerifier(opts, nonces);
 });
-
-// ===== [4.2] Redis (valfritt) =============================================
-// Aktivera genom SWISH_REDIS=1; anslutning via SWISH_REDIS_CONN (default "localhost:6379")
-var useRedis = string.Equals(Environment.GetEnvironmentVariable("SWISH_REDIS"), "1", StringComparison.Ordinal);
-if (useRedis)
-{
-    var connStr = Environment.GetEnvironmentVariable("SWISH_REDIS_CONN") ?? "localhost:6379";
-    builder.Services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(connStr));
-}
-// ==========================================================================
 
 var app = builder.Build();
 
@@ -149,24 +153,6 @@ app.MapPost("/webhook/swish", async (
             : Results.Unauthorized();
     }
 
-    // ===== [4.3] Redis-gate (persistant anti-replay) =======================
-    // Kör före signaturverifiering. Aktiveras bara om IConnectionMultiplexer finns registrerad.
-    IConnectionMultiplexer? redis = null;
-    try { redis = req.HttpContext.RequestServices.GetService<IConnectionMultiplexer>(); } catch { /* ignore */ }
-
-    if (redis is not null && !string.IsNullOrWhiteSpace(nonce))
-    {
-        // TTL = skew-fönster + liten marginal
-        var ttl = TimeSpan.FromMinutes(5) + TimeSpan.FromSeconds(30);
-        var isNew = await RedisReplayGate.TryRegisterNonceAsync(redis, "swish:nonce", nonce, ttl);
-        if (!isNew)
-        {
-            var payload = new { reason = "replay-detected (redis)" };
-            return Results.Json(payload, statusCode: 401);
-        }
-    }
-    // =======================================================================
-
     var canonical = $"{tsHeader}\n{nonce}\n{rawBody}";
     if (isDebug)
     {
@@ -223,4 +209,3 @@ static bool TryParseTimestamp(string tsHeader, out DateTimeOffset ts)
 }
 
 public partial class Program { }
-

@@ -8,43 +8,19 @@ namespace NordAPI.Swish.Webhooks;
 
 /// <summary>
 /// Verifierar Swish-webhookar.
-/// <para>
-/// Stöder följande header-namn (alias accepteras automagiskt):
-/// </para>
-/// <list type="bullet">
-///   <item>
-///     <description>
-///       <c>X-Swish-Timestamp</c>, <c>X-Swish-Signature</c>, <c>X-Swish-Nonce</c>
-///     </description>
-///   </item>
-///   <item>
-///     <description>
-///       <c>X-Timestamp</c>, <c>X-Signature</c>, <c>X-Nonce</c>
-///     </description>
-///   </item>
-/// </list>
+/// 
+/// Stöder header-alias:
+/// - X-Swish-Timestamp / X-Timestamp
+/// - X-Swish-Signature / X-Signature
+/// - X-Swish-Nonce / X-Nonce
 ///
-/// <para>
-/// Canonical-strängen som signeras är:
-/// </para>
-/// <code>
-/// {timestamp}\n{nonce}\n{body}
-/// </code>
-/// <para>där:</para>
-/// <list type="bullet">
-///   <item><description><c>timestamp</c> är exakt texten från headern (utan omformatering).</description></item>
-///   <item><description><c>nonce</c> är samma värde som i headern.</description></item>
-///   <item><description><c>body</c> är rå request-body oförändrad.</description></item>
-/// </list>
+/// Canonical som signeras:
+///   {timestamp}\n{nonce}\n{body}
 ///
-/// <para>
 /// Timestamp-format som accepteras:
-/// </para>
-/// <list type="bullet">
-///   <item><description>Unix sekunder (t.ex. <c>1757962690</c>)</description></item>
-///   <item><description>Unix millisekunder (t.ex. <c>1757960508877</c>)</description></item>
-///   <item><description>ISO-8601 (t.ex. <c>2025-09-15T18:21:01Z</c>)</description></item>
-/// </list>
+/// - Unix sekunder (ex: 1757962690)
+/// - Unix millisekunder (ex: 1757960508877)
+/// - ISO-8601 (ex: 2025-09-15T18:21:01Z)
 /// </summary>
 public sealed class SwishWebhookVerifier
 {
@@ -53,13 +29,6 @@ public sealed class SwishWebhookVerifier
     private readonly SwishWebhookVerifierOptions _opt;
     private readonly ISwishNonceStore _nonceStore;
 
-    /// <summary>
-    /// Skapar en verifierare.
-    /// </summary>
-    /// <param name="options">Verifieringsinställningar (måste innehålla <see cref="SwishWebhookVerifierOptions.SharedSecret"/>).</param>
-    /// <param name="nonceStore">Lagring för anti-replay (nonces).</param>
-    /// <exception cref="ArgumentNullException">Om <paramref name="options"/> eller <paramref name="nonceStore"/> är null.</exception>
-    /// <exception cref="ArgumentException">Om <see cref="SwishWebhookVerifierOptions.SharedSecret"/> saknas.</exception>
     public SwishWebhookVerifier(SwishWebhookVerifierOptions options, ISwishNonceStore nonceStore)
     {
         _opt = options ?? throw new ArgumentNullException(nameof(options));
@@ -71,10 +40,6 @@ public sealed class SwishWebhookVerifier
     /// <summary>
     /// Verifierar signatur, tidsfönster och replay-skydd.
     /// </summary>
-    /// <param name="body">Rå request-body (oförändrad).</param>
-    /// <param name="headers">Inkommande headers.</param>
-    /// <param name="nowUtc">Nuvarande tid i UTC (för testbarhet).</param>
-    /// <returns><see cref="VerifyResult"/> med <c>Success=true</c> om allt stämmer.</returns>
     public VerifyResult Verify(string body, IReadOnlyDictionary<string, string> headers, DateTimeOffset nowUtc)
     {
         // 1) Läs headers (tillåt alias)
@@ -104,7 +69,7 @@ public sealed class SwishWebhookVerifier
         if (!_nonceStore.TryRemember(nonce, expires))
             return VerifyResult.Fail("replay upptäckt (nonce sedd tidigare)");
 
-        // 5) Signaturkontroll (Base64(HMACSHA256(secret, "{ts}\n{nonce}\n{body}")))
+        // 5) Signaturkontroll: Base64(HMACSHA256(secret, "{ts}\n{nonce}\n{body}"))
         var canonical = $"{tsStr}\n{nonce}\n{body}";
         var key = Encoding.UTF8.GetBytes(_opt.SharedSecret);
         var data = Encoding.UTF8.GetBytes(canonical);
@@ -118,9 +83,6 @@ public sealed class SwishWebhookVerifier
         return VerifyResult.Ok();
     }
 
-    /// <summary>
-    /// Hämtar ett headervärde med stöd för flera aliasnamn.
-    /// </summary>
     private static bool TryGetAny(IReadOnlyDictionary<string, string> headers, out string value, params string[] names)
     {
         foreach (var name in names)
@@ -139,12 +101,8 @@ public sealed class SwishWebhookVerifier
         return false;
     }
 
-    /// <summary>
-    /// Accepterar Unix sekunder, Unix millisekunder och ISO-8601 (UTC).
-    /// </summary>
     private static bool TryParseTimestamp(string tsHeader, out DateTimeOffset tsUtc)
     {
-        // Unix (sekunder/millis)
         if (long.TryParse(tsHeader, out var num))
         {
             if (tsHeader.Length >= 13) // millis
@@ -156,7 +114,6 @@ public sealed class SwishWebhookVerifier
             return true;
         }
 
-        // ISO-8601
         if (DateTimeOffset.TryParse(
                 tsHeader,
                 CultureInfo.InvariantCulture,
@@ -171,9 +128,6 @@ public sealed class SwishWebhookVerifier
         return false;
     }
 
-    /// <summary>
-    /// Konstanttid-jämförelse av Base64-strängar.
-    /// </summary>
     private static bool ConstantTimeEquals(string a, string b)
     {
         var ba = Encoding.UTF8.GetBytes(a);
@@ -187,15 +141,11 @@ public sealed class SwishWebhookVerifier
         return diff == 0;
     }
 
-    /// <summary>
-    /// Resultat från verifiering.
-    /// </summary>
     public readonly record struct VerifyResult(bool Success, string? Reason)
     {
-        /// <summary>OK.</summary>
         public static VerifyResult Ok() => new(true, null);
-        /// <summary>Misslyckades med angiven orsak.</summary>
         public static VerifyResult Fail(string reason) => new(false, reason);
     }
 }
+
 
