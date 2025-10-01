@@ -157,4 +157,39 @@ $env:SWISH_PFX_PASSWORD="secret"
 dotnet run --project .\samples\SwishSample.Web\SwishSample.Web.csproj
 ```
 
-  ---
+---
+
+### Environment selection for BaseAddress
+
+The sample chooses the Swish base URL from environment variables:
+
+1. `SWISH_BASE_URL` (absolute override, if set)
+2. `SWISH_ENV=TEST|PROD`:
+   - `SWISH_BASE_URL_TEST` when `SWISH_ENV=TEST`
+   - `SWISH_BASE_URL_PROD` when `SWISH_ENV=PROD`
+3. Fallback: `https://example.invalid`
+
+On startup, the sample logs the chosen environment and URL:
+```
+[Swish] Environment: 'TEST' | BaseAddress: https://your-test-url
+```
+
+**Examples (PowerShell):**
+```powershell
+# Dev default (fallback)
+dotnet run --project .\samples\SwishSample.Web\SwishSample.Web.csproj
+
+# TEST
+$env:SWISH_ENV="TEST"
+$env:SWISH_BASE_URL_TEST="https://your-test-url"
+dotnet run --project .\samples\SwishSample.Web\SwishSample.Web.csproj
+
+# PROD
+$env:SWISH_ENV="PROD"
+$env:SWISH_BASE_URL_PROD="https://your-prod-url"
+dotnet run --project .\samples\SwishSample.Web\SwishSample.Web.csproj
+
+# Absolute override
+$env:SWISH_BASE_URL="https://override.example"
+dotnet run --project .\samples\SwishSample.Web\SwishSample.Web.csproj
+```
