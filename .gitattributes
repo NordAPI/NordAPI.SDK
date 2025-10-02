@@ -12,6 +12,12 @@
 
 # Unix scripts (LF)
 *.sh       text eol=lf
+*.bash     text eol=lf
+
+# GitHub Actions & CI configs (LF)
+*.yml      text eol=lf
+*.yaml     text eol=lf
+.github/** text eol=lf
 
 # Keep binaries untouched
 *.png      binary
@@ -21,3 +27,4 @@
 *.pdf      binary
 *.pfx      binary
 *.cer      binary
+

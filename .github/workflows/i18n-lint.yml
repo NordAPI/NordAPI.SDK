@@ -1,0 +1,15 @@
+﻿name: i18n-lint
+on:
+  pull_request:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Make scanner executable (just in case)
+        run: git update-index --chmod=+x tools/i18n-scan.sh || true
+
+      - name: Run i18n scan (fails on Swedish letters in non-localized files)
+        run: bash tools/i18n-scan.sh
