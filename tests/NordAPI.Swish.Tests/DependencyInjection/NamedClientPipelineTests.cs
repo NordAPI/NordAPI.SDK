@@ -14,7 +14,7 @@ namespace NordAPI.Swish.Tests.DependencyInjection
             var services = new ServiceCollection();
 
             // Opt-in named client (utan cert → vanlig handler, men named pipeline finns)
-            services.AddSwishHttpClient();
+            services.AddSwishMtlsTransport();
 
             services.AddSwishClient(opts =>
             {
