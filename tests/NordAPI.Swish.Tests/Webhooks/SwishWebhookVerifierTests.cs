@@ -1,3 +1,4 @@
+﻿using NordAPI.Swish.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -83,7 +84,7 @@ public class SwishWebhookVerifierTests
         var ts     = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
         var nonce  = Guid.NewGuid().ToString("N");
 
-        // Fel canonical (byter plats på nonce/body)
+        // Fel canonical (byter plats pÃ¥ nonce/body)
         var wrongCanonical = $"{ts}\n{body}\n{nonce}";
         var sigB64 = Sign(secret, wrongCanonical);
 
@@ -121,7 +122,9 @@ public class SwishWebhookVerifierTests
         var verifier = CreateVerifier(secret);
         var result   = verifier.Verify(body, headers, DateTimeOffset.UtcNow);
 
-        // Förväntar oss att verifieraren nekar pga tidsfönster (±5 min i sample)
+        // FÃ¶rvÃ¤ntar oss att verifieraren nekar pga tidsfÃ¶nster (Â±5 min i sample)
         result.Success.Should().BeFalse();
     }
 }
+
+

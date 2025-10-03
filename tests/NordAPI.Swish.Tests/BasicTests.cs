@@ -1,3 +1,4 @@
+﻿using NordAPI.Swish.DependencyInjection;
 using Xunit;
 using NordAPI.Swish;
 using System.Net.Http;
@@ -16,3 +17,5 @@ public class BasicTests
         Assert.NotNull(client);
     }
 }
+
+

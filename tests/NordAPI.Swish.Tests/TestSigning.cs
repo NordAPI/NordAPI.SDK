@@ -1,3 +1,4 @@
+﻿using NordAPI.Swish.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -40,3 +41,5 @@ namespace NordAPI.Swish.Tests
         }
     }
 }
+
+

@@ -1,3 +1,4 @@
+ï»¿using NordAPI.Swish.DependencyInjection;
 using System;
 using System.Threading.Tasks;
 using Xunit;
@@ -11,7 +12,7 @@ public class RedisNonceStoreTests
         var conn = Environment.GetEnvironmentVariable("REDIS_URL");
         if (string.IsNullOrWhiteSpace(conn))
         {
-            // Ingen Redis konfigurerad – hoppa över testet
+            // Ingen Redis konfigurerad â€“ hoppa Ã¶ver testet
             return;
         }
 
@@ -26,3 +27,5 @@ public class RedisNonceStoreTests
         Assert.False(second);
     }
 }
+
+

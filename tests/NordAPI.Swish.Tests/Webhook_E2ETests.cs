@@ -1,3 +1,4 @@
+﻿using NordAPI.Swish.DependencyInjection;
 using System;
 using System.Net;
 using System.Net.Http;
@@ -17,14 +18,14 @@ namespace NordAPI.Swish.Tests
 
         public Webhook_E2ETests(WebApplicationFactory<Program> factory)
         {
-            // Sätt env vars som sample-läses via Environment.GetEnvironmentVariable
+            // SÃ¤tt env vars som sample-lÃ¤ses via Environment.GetEnvironmentVariable
             Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
             Environment.SetEnvironmentVariable("SWISH_WEBHOOK_SECRET", "dev_secret");
             Environment.SetEnvironmentVariable("SWISH_DEBUG", "1");
             Environment.SetEnvironmentVariable("SWISH_ALLOW_OLD_TS", "1");
             Environment.SetEnvironmentVariable("SWISH_REQUIRE_NONCE", "0");
 
-            _factory = factory.WithWebHostBuilder(_ => { /* no-op, env räcker */ });
+            _factory = factory.WithWebHostBuilder(_ => { /* no-op, env rÃ¤cker */ });
         }
 
         [Fact]
@@ -58,7 +59,7 @@ namespace NordAPI.Swish.Tests
             req2.Content = new StringContent(bodyJson, Encoding.UTF8, "application/json");
 
             var res2 = await client.SendAsync(req2);
-            // I debug-läge svarar sample med 401 + JSON { reason = "...replay..." }
+            // I debug-lÃ¤ge svarar sample med 401 + JSON { reason = "...replay..." }
             res2.StatusCode.Should().Be(HttpStatusCode.Unauthorized, await Dump(res2));
             var reason = await res2.Content.ReadAsStringAsync();
             reason.ToLowerInvariant().Should().ContainAny("replay", "nonce");
@@ -79,3 +80,5 @@ namespace NordAPI.Swish.Tests
         }
     }
 }
+
+
