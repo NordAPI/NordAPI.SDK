@@ -1,4 +1,5 @@
-﻿using NordAPI.Swish.Security.Http;
+﻿using NordAPI.Swish.DependencyInjection;
+using NordAPI.Swish.Security.Http;
 using Xunit;
 
 namespace NordAPI.Swish.Tests
@@ -15,3 +16,5 @@ namespace NordAPI.Swish.Tests
         }
     }
 }
+
+
