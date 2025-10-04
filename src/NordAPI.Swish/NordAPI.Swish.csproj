@@ -10,16 +10,21 @@
     <Description>.NET SDK for Swish (MVP) with HMAC, rate limiting and mTLS support.</Description>
     <RepositoryType>git</RepositoryType>
 
-    <!-- NuGet README (måste ligga i paketroten) -->
+    <!-- NuGet README (must be located in the package root) -->
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
-  <!-- Tysta CS1591 endast i Debug så dotnet watch inte spam:ar. Release oförändrad. -->
+  <!-- Suppress CS1591 only in Debug to avoid dotnet watch spamming. Release remains unchanged. -->
   <PropertyGroup Condition="'$(Configuration)'=='Debug'">
     <NoWarn>$(NoWarn);1591</NoWarn>
-    <!-- Alternativ om du föredrar: slå av XML-doc helt i Debug
+    <!-- Alternative if preferred: disable XML documentation entirely in Debug
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     -->
+  </PropertyGroup>
+
+  <!-- Suppress missing XML-doc warnings in Release -->
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -31,7 +36,7 @@
     <PackageReference Include="System.Net.Http.Json" Version="9.0.8" />
   </ItemGroup>
 
-  <!-- VIKTIGT: Använd Update (inte Include) och packa i paketroten -->
+  <!-- IMPORTANT: Use Update (not Include) and ensure it's packed in the package root -->
   <ItemGroup>
     <None Update="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>

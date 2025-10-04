@@ -37,10 +37,16 @@
     <ProjectReference Include="..\..\samples\SwishSample.Web\SwishSample.Web.csproj" />
   </ItemGroup>
 
+  <!-- Disable XML documentation generation and suppress CS1591 warnings globally -->
   <PropertyGroup>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
 
+  <!-- Suppress missing XML-doc warnings in Release -->
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
 
 </Project>
+
