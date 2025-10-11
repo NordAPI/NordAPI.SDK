@@ -1,7 +1,13 @@
-
 # NordAPI.Swish SDK (MVP)
 
-Ett lättviktigt och säkert .NET SDK för att integrera Swish-betalningar och återköp i test- och utvecklingsmiljöer.  
+[![Build](https://github.com/NordAPI/NordAPI.SwishSdk/actions/workflows/ci.yml/badge.svg)](https://github.com/NordAPI/NordAPI.SwishSdk/actions/workflows/ci.yml)
+[![NuGet](https://img.shields.io/badge/NuGet-Unlisted-blue)](https://www.nuget.org/packages/NordAPI.Swish)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+
+> 🇬🇧 English version: [README.md](../../README.md)  
+> ✅ Se även: [Integration Checklist](../../docs/integration-checklist.md)
+
+Ett lättviktigt och säkert .NET SDK för att integrera **Swish-betalningar och återköp** i test- och utvecklingsmiljöer.  
 Stöd för HMAC-autentisering, mTLS och hastighetsbegränsning ingår som standard.
 
 ---
@@ -17,20 +23,24 @@ Stöd för HMAC-autentisering, mTLS och hastighetsbegränsning ingår som standa
 
 ---
 
-## ⚡ Snabbstart
-
-## Kom igång på 5 minuter (ASP.NET Core)
+## ⚡ Snabbstart (ASP.NET Core)
 
 Med detta SDK får du en färdig Swish-klient på bara några minuter:
 
-- **HttpClientFactory** med retry och rate limiting
-- **HMAC-signering** inbyggt
-- **mTLS (valfritt)** via miljövariabler — strikt kedja i Release; avslappnad endast i Debug
+- **HttpClientFactory** med retry och rate limiting  
+- **HMAC-signering** inbyggt  
+- **mTLS (valfritt)** via miljövariabler — strikt kedja i Release; avslappnad endast i Debug  
 - **Webhook-verifiering** med replay-skydd (nonce-store)
 
 ### 1) Installera / referera
 
-Lägg till en projektreferens (lokalt under utveckling):
+Installera från NuGet:
+
+```powershell
+dotnet add package NordAPI.Swish
+```
+
+Eller lägg till en projektreferens (lokalt under utveckling):
 
 ```xml
 <ItemGroup>
@@ -38,7 +48,7 @@ Lägg till en projektreferens (lokalt under utveckling):
 </ItemGroup>
 ```
 
-### 2) Registrera klienten i program.cs
+### 2) Registrera klienten i *Program.cs*
 
 ```csharp
 using NordAPI.Swish;
@@ -52,19 +62,31 @@ builder.Services.AddSwishClient(opts =>
         ?? "https://example.invalid");
 
     opts.ApiKey = Environment.GetEnvironmentVariable("SWISH_API_KEY")
-                  ?? "dev-key";
+                  ?? throw new InvalidOperationException("Saknar SWISH_API_KEY");
 
     opts.Secret = Environment.GetEnvironmentVariable("SWISH_SECRET")
-                  ?? "dev-secret";
+                  ?? throw new InvalidOperationException("Saknar SWISH_SECRET");
 });
 
 var app = builder.Build();
+
+app.MapGet("/ping", async (ISwishClient swish) =>
+{
+    var result = await swish.PingAsync();
+    return Results.Ok(result);
+});
+
+app.Run();
 ```
 
 ### 3) Använd i din kod
 
 ```csharp
-public class PaymentsController
+using Microsoft.AspNetCore.Mvc;
+
+[ApiController]
+[Route("[controller]")]
+public class PaymentsController : ControllerBase
 {
     private readonly ISwishClient _swish;
 
@@ -73,85 +95,97 @@ public class PaymentsController
         _swish = swish;
     }
 
-    [HttpPost("/pay")]
+    [HttpPost("pay")]
     public async Task<IActionResult> Pay()
     {
         var create = new CreatePaymentRequest(100.00m, "SEK", "46701234567", "Testköp");
         var payment = await _swish.CreatePaymentAsync(create);
-
-        return Results.Ok(payment);
+        return Ok(payment);
     }
 }
 ```
 
-### 4) mTLS via miljövariabler (valfritt)
+---
 
-## Aktivera mutual TLS med en klientcertfil:
+## 🔐 mTLS via miljövariabler (valfritt)
 
-- SWISH_PFX_PATH – sökväg till .pfx
+Aktivera mutual TLS med klientcertifikat (PFX):
 
-- SWISH_PFX_PASS – lösenord
+- `SWISH_PFX_PATH` — sökväg till `.pfx`  
+- `SWISH_PFX_PASSWORD` — lösenord till certifikatet  
 
-Beteende:
+**Beteende:**
+- Inget certifikat → fallback utan mTLS.  
+- **Debug:** avslappnad servercert-validering (endast lokalt).  
+- **Release:** strikt certkedja (ingen "allow invalid chain").  
 
-- Inget cert → fallback utan mTLS.
-
-- Debug = avslappnad servercert-validering (endast lokalt).
-
-- Release = strikt certkedja (ingen “allow invalid chain”).
-
-## Exempel(PowerShell):
-
+**Exempel (PowerShell):**
 ```powershell
 $env:SWISH_PFX_PATH = "C:\certs\swish-client.pfx"
-$env:SWISH_PFX_PASS = "hemligt-lösenord"
+$env:SWISH_PFX_PASSWORD = "hemligt-lösenord"
 ```
-Produktion: lagra cert/secret i KeyVault/Secret Manager - aldrig i repo.
 
-### 5) Starta & smoketesta
+> 🔒 I produktion ska certifikat och hemligheter lagras i **Azure Key Vault** eller liknande — aldrig i repo.
 
-Starta sample-appen (port 5000):
+---
+
+## 🧪 Starta & röktesta
+
+Starta sample-appen med hemlighet (port 5000):
+
 ```powershell
+$env:SWISH_WEBHOOK_SECRET = "dev_secret"
 dotnet run --project .\samples\SwishSample.Web\SwishSample.Web.csproj --urls http://localhost:5000
 ```
 
-I ett nytt PowerShell-fönster, kör smoketest:
+Kör röktest i ett nytt fönster:
+
 ```powershell
 .\scripts\smoke-webhook.ps1 -Secret dev_secret -Url http://localhost:5000/webhook/swish
 ```
 
-Förväntat svar:
+### ✅ Förväntat svar (Success)
 ```json
 {"received": true}
 ```
 
-### 6) Testa replay-skydd
+### ❌ Förväntat svar vid replay (Error)
+```json
+{"reason": "replay upptäckt (nonce sedd tidigare)"}
+```
 
-Kör samma smoketest två gånger direkt efter varandra.
-Det andra anropet ska nekas (replay detekteras)
-- Använder du Redis för nonce-store, sätt REDIS_URL/SWISH_REDIS_CONN. Utan Redis används in-memory-store (bra för lokal dev).
-
-### 7) Vanliga miljövariabler
-
-| Variabel           | Syfte                                      | Exempel                    |
-|--------------------|--------------------------------------------|----------------------------|
-| SWISH_BASE_URL     | Bas-URL till Swish API                     | https://example.invalid    |
-| SWISH_API_KEY      | API-nyckel för HMAC                        | dev-key                    |
-| SWISH_SECRET       | Hemlighet för HMAC                         | dev-secret                 |
-| SWISH_PFX_PATH     | Sökväg till klientcert (.pfx)              | C:\certs\swish-client.pfx  |
-| SWISH_PFX_PASS     | Lösenord för .pfx                          | ••••                       |
-| SWISH_DEBUG        | Verbosare loggning / lättare verifiering   | 1                          |
-| SWISH_ALLOW_OLD_TS | Tillåt äldre timestamps vid verifiering    | 1 (endast dev)             |
-
-### 8) Felsökning (kort)
-
-- 404/connection refused: kontrollera att appen lyssnar på rätt URL (--urls) och port.
-- mTLS fel: validera SWISH_PFX_PATH + SWISH_PFX_PASS och att certkedjan är giltig (Release är strikt).
-- Replay nekar alltid: rensa in-memory/Redis nonce-store eller byt nonce vid test.
+- I produktion: sätt `SWISH_REDIS` (sample accepterar även aliasen `REDIS_URL` och `SWISH_REDIS_CONN`).  
+  Utan Redis används in-memory-store (bra för lokal utveckling).
 
 ---
 
-## 🌐 ASP.NET Core-integration
+## 🌐 Vanliga miljövariabler
+
+| Variabel             | Syfte                                      | Exempel                      |
+|----------------------|--------------------------------------------|------------------------------|
+| SWISH_BASE_URL       | Bas-URL till Swish-API                     | https://example.invalid      |
+| SWISH_API_KEY        | API-nyckel för HMAC                        | dev-key                      |
+| SWISH_SECRET         | Hemlighet för HMAC                         | dev-secret                   |
+| SWISH_PFX_PATH       | Sökväg till klientcertifikat (.pfx)        | C:\certs\swish-client.pfx  |
+| SWISH_PFX_PASSWORD   | Lösenord till klientcertifikat             | ••••                         |
+| SWISH_WEBHOOK_SECRET | Hemlighet för webhook-HMAC                 | dev_secret                   |
+| SWISH_REDIS          | Redis-anslutningssträng (nonce-store)      | localhost:6379               |
+| SWISH_DEBUG          | Verbosare loggning / lättare verifiering   | 1                            |
+| SWISH_ALLOW_OLD_TS   | Tillåt äldre timestamps vid verifiering    | 1 (endast dev)               |
+
+> 💡 Hårdkoda aldrig hemligheter. Använd miljövariabler, Secret Manager eller GitHub Actions Secrets.
+
+---
+
+## 🧰 Felsökning
+
+- **404 / Connection refused:** Kontrollera att appen lyssnar på rätt URL (`--urls`) och port.  
+- **mTLS-fel:** Kontrollera `SWISH_PFX_PATH` + `SWISH_PFX_PASSWORD` och att certifikatet är giltigt.  
+- **Replay nekas alltid:** Rensa in-memory/Redis nonce-store eller byt nonce vid test.
+
+---
+
+## 🧩 ASP.NET Core-integration (skärpt validering)
 
 ```csharp
 using NordAPI.Swish;
@@ -164,160 +198,84 @@ builder.Services.AddSwishClient(opts =>
     opts.BaseAddress = new Uri(Environment.GetEnvironmentVariable("SWISH_BASE_URL")
         ?? throw new InvalidOperationException("Saknar SWISH_BASE_URL"));
     opts.ApiKey = Environment.GetEnvironmentVariable("SWISH_API_KEY")
-        ?? throw new InvalidOperationException("Saknar SWISH_API_KEY"));
+        ?? throw new InvalidOperationException("Saknar SWISH_API_KEY");
     opts.Secret = Environment.GetEnvironmentVariable("SWISH_SECRET")
-        ?? throw new InvalidOperationException("Saknar SWISH_SECRET"));
+        ?? throw new InvalidOperationException("Saknar SWISH_SECRET");
 });
 
 var app = builder.Build();
 
 app.MapGet("/ping", async (ISwishClient swish) => await swish.PingAsync());
-
 app.Run();
 ```
 
 ---
 
-## 🔧 Miljövariabler
+## 🛠️ Snabba utvecklingskommandon
 
-| Variabel             | Beskrivning                         |
-|----------------------|-------------------------------------|
-| `SWISH_BASE_URL`     | Bas-URL för Swish API               |
-| `SWISH_API_KEY`      | API-nyckel för HMAC-autentisering   |
-| `SWISH_SECRET`       | Delad nyckel för HMAC               |
-| `SWISH_PFX_PATH`     | Sökväg till klientcertifikat (.pfx) |
-| `SWISH_PFX_PASSWORD` | Lösenord för certifikatet           |
-
-> Hårdkoda aldrig hemligheter. Använd miljövariabler, Secret Manager eller GitHub Actions Secrets.
-
----
-
-## 🧪 Exempelprojekt
-
-Se `samples/SwishSample.Web` för ett körbart exempel:
-
-- `GET /health` → OK
-- `GET /di-check` → Verifierar DI-konfiguration
-- `GET /ping` → Mockat svar (ingen riktig HTTP)
-
-Byt ut mot riktiga miljövariabler och aktivera `PingAsync()` för integrationstester.
-
----
-
-### 🔧 Röktest av webhook (endast för lokal utveckling)
-
-SDK:t innehåller ett enkelt röktest för att verifiera att webhook-signering fungerar lokalt.
-
-1. Starta sample-servern med hemlighet:
-   ```powershell
-   $env:SWISH_WEBHOOK_SECRET = "dev_secret"
-   $env:SWISH_DEBUG = "1"
-   dotnet watch run --project .\samples\SwishSample.Web\SwishSample.Web.csproj
-   ```
-
-2.  Kör röktestet
-    ```powershell
-    .\scripts\smoke-webhook.ps1 -Secret dev_secret -Replay
-    ```
-
-3. Förväntat resultat:
-
-Första request → {"received":true} (kan visas som True i PowerShell).
-
-Andra request (replay) → 401 med {"reason":"replay upptäckt (nonce sedd tidigare)"}.
-
-(Obs: Detta är ett utvecklarverktyg. Riktiga Swish-callbackar skickar inte dessa HMAC-headers. I produktion används en separat verifieringsmekanism.) 
-
-
----
-
-## 🔐 mTLS-stöd
-
- Om din miljö kräver klientcertifikat:
-
-```csharp
-using System.Security.Cryptography.X509Certificates;
-
-var cert = new X509Certificate2("sökväg/till/certifikat.pfx", "lösenord");
-builder.Services.AddSwishClient(opts => { /* … */ }, clientCertificate: cert);
-```
-
-
----
-
-## Dev quick commands
-
-
-# Build + test
+**Bygg & test**
 ```powershell
 dotnet build
 dotnet test
 ```
 
-# Run sample (development)
+**Kör sample (utveckling)**
 ```powershell
-dotnet watch --project samples/SwishSample.Web run
+dotnet watch --project .\samples\SwishSample.Web\SwishSample.Web.csproj run
 ```
 
 ---
 
-## HTTP timeout & retry (named client **"Swish"**)
+## ⏱️ HTTP-timeout & återförsök (namngiven klient "Swish")
 
-The SDK provides an **opt-in** named HttpClient `"Swish"` with:
-- **Timeout:** `30s` (`HttpClient.Timeout`)
-- **Retry policy:** up to **3** retries with exponential backoff + jitter  
-  Retries on: **408**, **429**, **5xx**, **HttpRequestException**, **TaskCanceledException** (timeout)
+SDK:t tillhandahåller en **opt-in** namngiven `HttpClient` **"Swish"** med:  
+- **Timeout:** 30 sekunder  
+- **Återförsökspolicy:** upp till 3 försök med exponentiell backoff + jitter  
+  (på statuskoder 408, 429, 5xx, samt `HttpRequestException` och `TaskCanceledException`)
 
-**When it applies**
-- Register the pipeline via:
-  - `services.AddSwishHttpClient()` (SDK extension), or
-  - In the sample: set `SWISH_USE_NAMED_CLIENT=1` (which calls the extension).
-- If you do **not** call `AddSwishHttpClient()`, you’ll get the default pipeline (no custom retry, default .NET timeout).
-
-**mTLS (optional)**
-- Add a client cert when env vars are present:
-  - `SWISH_PFX_PATH` **or** `SWISH_PFX_BASE64`  
-  - and `SWISH_PFX_PASSWORD` **or** `SWISH_PFX_PASS`
-- DEBUG allows relaxed chain (dev only). Release is strict.
-
-**Override / extend**
-- You can add more handlers around the named client (outermost are added last):
+**Aktivera:**
 ```csharp
-services.AddSwishHttpClient(); // registers "Swish" with timeout+retry(+mTLS if env)
+services.AddSwishHttpClient(); // registrerar "Swish" (timeout + retry + mTLS om miljövariabler finns)
+```
+
+**Utöka eller ersätt:**
+```csharp
+services.AddSwishHttpClient();
 services.AddHttpClient("Swish")
-        .AddHttpMessageHandler(_ => new MyCustomHandler()); // sits outside SDK retry
+        .AddHttpMessageHandler(_ => new MyCustomHandler()); // ligger utanför SDK:s retry-pipeline
 ```
-**Disable**
 
-- Don’t call AddSwishHttpClient() (the SDK will use the plain default pipeline).
-
-- Or re-register "Swish" yourself to replace/override handlers and timeout.
-
-## Quick check (sample)
-
-```powershell
-$env:SWISH_USE_NAMED_CLIENT="1"
-# optional mTLS
-$env:SWISH_PFX_PATH="C:\path\client.pfx"
-$env:SWISH_PFX_PASSWORD="secret"
-
-dotnet run --project .\samples\SwishSample.Web\SwishSample.Web.csproj
-```
+**Avaktivera:**
+- Anropa inte `AddSwishHttpClient()` (då används standardpipelinen utan retry och timeout).  
+- Eller registrera om `"Swish"` manuellt för att ersätta eller utöka handlers och inställningar.
 
 ---
 
-## mTLS via miljövariabler (för SDK)
+## 🛡️ Security Disclosure
 
-SDK:t kan ladda klientcertifikat för mTLS om miljövariablerna är satta:
-
-- `SWISH_PFX_PATH` → sökväg till PFX-filen
-- `SWISH_PFX_PASS` → lösenord till PFX-filen
-
-Om dessa inte är satta används fallback utan mTLS.  
-I DEBUG tillåts enklare utvecklarvalidering, i RELEASE krävs en strikt certkedja.
-
+Om du hittar ett säkerhetsproblem, rapportera det privat via e-post till `security@nordapi.se`.  
+Använd **inte** GitHub Issues för säkerhetsärenden.
 
 ---
+
+## 📦 Licens
+
+Detta projekt är licensierat under **MIT-licensen**.
+
+---
+
+_Senast uppdaterad: Oktober 2025_
+
+
+
+
+
+
+
+
+
+
+
 
 
 
