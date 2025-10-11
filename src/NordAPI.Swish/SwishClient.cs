@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -12,41 +11,18 @@ using NordAPI.Swish.Security.Http;
 
 namespace NordAPI.Swish;
 
+/// <summary>
+/// Lightweight and secure .NET SDK client for Swish payment and refund operations.
+/// Provides HMAC signing, optional mTLS, and basic retry/backoff for transient errors.
+/// </summary>
 public sealed class SwishClient : ISwishClient
 {
     private readonly HttpClient _http;
     private readonly ILogger<SwishClient>? _logger;
     private readonly SwishOptions _options = new();
 
-    public SwishClient(HttpClient httpClient, SwishOptions? options = null, ILogger<SwishClient>? logger = null)
-    {
-        _http = httpClient;
-        _logger = logger;
-        if (options is not null) _options = options;
-    }
-
-    public static HttpClient CreateHttpClient(
-        Uri baseAddress,
-        string apiKey,
-        string secret,
-        HttpMessageHandler? innerHandler = null)
-    {
-        // Pipeline: HMAC -> RateLimiter -> (inner or default)
-        var pipeline = new HmacSigningHandler(apiKey, secret)
-        {
-            InnerHandler = new RateLimitingHandler(maxConcurrency: 4, minDelayBetweenCalls: TimeSpan.FromMilliseconds(100))
-            {
-                InnerHandler = innerHandler ?? new HttpClientHandler()
-            }
-        };
-
-        var http = new HttpClient(pipeline) { BaseAddress = baseAddress };
-        return http;
-    }
-
-    // ========================== Policy-helper INNE I KLASSEN ==========================
-
-    private static readonly JsonSerializerOptions _json = new()
+    // Default JSON settings for Swish API communication (camelCase, case-insensitive)
+    private static readonly JsonSerializerOptions DefaultJsonSerializerOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         PropertyNameCaseInsensitive = true,
@@ -54,20 +30,54 @@ public sealed class SwishClient : ISwishClient
     };
 
     /// <summary>
-    /// Central HTTP-helper som sätter Idempotency-Key för create, hanterar retry på transienta fel
-    /// och mappar felkoder till våra SwishException-typer.
+    /// Creates a fully configured <see cref="HttpClient"/> pipeline with HMAC, rate limiting and mTLS.
+    /// Use this when not relying on ASP.NET Core DI extensions.
+    /// </summary>
+    public static HttpClient CreateHttpClient(
+        Uri baseAddress,
+        string apiKey,
+        string secret,
+        HttpMessageHandler? innerHandler = null)
+    {
+        // Innermost transport w/ optional mTLS (reads SWISH_PFX_PATH / SWISH_PFX_PASSWORD)
+        var mtlsHandler = SwishMtlsHandlerFactory.Create();
+
+        // Build pipeline: HMAC -> RateLimit -> (custom inner?) -> mTLS transport
+        var pipeline = new HmacSigningHandler(apiKey, secret)
+        {
+            InnerHandler = new RateLimitingHandler(maxConcurrency: 4, minDelayBetweenCalls: TimeSpan.FromMilliseconds(100))
+            {
+                InnerHandler = innerHandler ?? mtlsHandler
+            }
+        };
+
+        return new HttpClient(pipeline) { BaseAddress = baseAddress };
+    }
+
+    /// <summary>
+    /// Construct the client with a pre-configured <see cref="HttpClient"/>.
+    /// </summary>
+    public SwishClient(HttpClient httpClient, SwishOptions? options = null, ILogger<SwishClient>? logger = null)
+    {
+        _http = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        _logger = logger;
+        if (options is not null) _options = options;
+    }
+
+    // =======================================================================
+    // Retry-safe HTTP executor (uses a request factory to recreate the request)
+    // =======================================================================
+
+    /// <summary>
+    /// Executes an HTTP request with basic retry/backoff for transient errors and maps
+    /// HTTP status codes to SDK exceptions. A request factory is used so the request
+    /// can be recreated on each retry (safe for streamed content).
     /// </summary>
     private async Task<T> SendWithPolicyAsync<T>(
-        HttpRequestMessage request,
+        Func<HttpRequestMessage> requestFactory,
         bool isCreate = false,
         CancellationToken ct = default)
     {
-        // 1) Idempotency-Key för create-operationer (om inte redan satt)
-        if (isCreate && !request.Headers.Contains("Idempotency-Key"))
-        {
-            request.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString("N"));
-        }
-
         const int maxAttempts = 3;
         int attempt = 0;
         Exception? lastEx = null;
@@ -75,16 +85,24 @@ public sealed class SwishClient : ISwishClient
         while (attempt < maxAttempts)
         {
             attempt++;
+            using var request = requestFactory();
+
+            // Add Idempotency-Key for create operations if not already present
+            if (isCreate && !request.Headers.Contains("Idempotency-Key"))
+            {
+                request.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString("N"));
+            }
+
             try
             {
-                using var response = await _http.SendAsync(
-                    request, HttpCompletionOption.ResponseHeadersRead, ct);
+                using var response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct)
+                                                .ConfigureAwait(false);
 
-                var body = response.Content == null
+                var body = response.Content is null
                     ? null
-                    : await response.Content.ReadAsStringAsync(ct);
+                    : await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
 
-                // 2xx → success
+                // Success
                 if ((int)response.StatusCode is >= 200 and < 300)
                 {
                     if (typeof(T) == typeof(string))
@@ -93,25 +111,25 @@ public sealed class SwishClient : ISwishClient
                     if (string.IsNullOrWhiteSpace(body))
                         return default!;
 
-                    var obj = JsonSerializer.Deserialize<T>(body, _json)!;
+                    var obj = JsonSerializer.Deserialize<T>(body, DefaultJsonSerializerOptions)!;
                     return obj;
                 }
 
-                // Felmappning
+                // Non-transient error mapping
                 if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
-                    throw new SwishAuthException("Authentication/authorization failed", response.StatusCode, body);
+                    throw new SwishAuthException("Authentication/authorization failed.", response.StatusCode, body);
 
-                if (response.StatusCode is HttpStatusCode.BadRequest or (HttpStatusCode)422)
+                if (response.StatusCode is HttpStatusCode.BadRequest or (HttpStatusCode)422 /* Unprocessable Entity */)
                 {
                     var apiErr = SwishApiError.TryParse(body);
-                    var msg = apiErr is null ? "Validation failed" : $"Validation failed: {apiErr}";
+                    var msg = apiErr is null ? "Validation failed." : $"Validation failed: {apiErr}";
                     throw new SwishValidationException(msg, response.StatusCode, body);
                 }
 
                 if (response.StatusCode == HttpStatusCode.Conflict)
-                    throw new SwishConflictException("Conflict (possibly duplicate/idempotent key collision)", response.StatusCode, body);
+                    throw new SwishConflictException("Conflict (possibly duplicate/idempotency collision).", response.StatusCode, body);
 
-                // Transienta fel → retry
+                // Transient → retry
                 if (response.StatusCode is HttpStatusCode.RequestTimeout
                     or (HttpStatusCode)429
                     or HttpStatusCode.InternalServerError
@@ -119,88 +137,107 @@ public sealed class SwishClient : ISwishClient
                     or HttpStatusCode.ServiceUnavailable
                     or HttpStatusCode.GatewayTimeout)
                 {
-                    throw new SwishTransientException($"Transient HTTP {(int)response.StatusCode}", response.StatusCode, body);
+                    throw new SwishTransientException($"Transient HTTP {(int)response.StatusCode}.", response.StatusCode, body);
                 }
 
-                // Annat oväntat fel
-                throw new SwishException($"Unexpected HTTP {(int)response.StatusCode}", response.StatusCode, body);
+                // Fallback
+                throw new SwishException($"Unexpected HTTP {(int)response.StatusCode}.", response.StatusCode, body);
             }
             catch (SwishTransientException ex) when (attempt < maxAttempts)
             {
                 lastEx = ex;
-                await Task.Delay(BackoffDelay(attempt), ct);
-                continue;
+                await Task.Delay(BackoffDelay(attempt), ct).ConfigureAwait(false);
             }
             catch (HttpRequestException ex) when (attempt < maxAttempts)
             {
                 lastEx = ex;
-                await Task.Delay(BackoffDelay(attempt), ct);
-                continue;
+                await Task.Delay(BackoffDelay(attempt), ct).ConfigureAwait(false);
             }
             catch (TaskCanceledException ex) when (!ct.IsCancellationRequested && attempt < maxAttempts)
             {
                 lastEx = ex;
-                await Task.Delay(BackoffDelay(attempt), ct);
-                continue;
+                await Task.Delay(BackoffDelay(attempt), ct).ConfigureAwait(false);
             }
         }
 
-        throw new SwishTransientException($"Request failed after {maxAttempts} attempts", null, null, lastEx);
+        throw new SwishTransientException($"Request failed after {maxAttempts} attempts.", null, null, lastEx);
     }
 
     private static TimeSpan BackoffDelay(int attempt)
     {
+        // Exponential backoff with jitter: ~200ms, 400ms, 800ms (+0–100ms)
         var baseMs = 200 * (int)Math.Pow(2, attempt - 1);
         var jitter = Random.Shared.Next(0, 100);
         return TimeSpan.FromMilliseconds(baseMs + jitter);
     }
 
-    // ======================== /Policy-helper ======================================
+    // =======================================================================
+    // ISwishClient implementation
+    // =======================================================================
 
-    // === Exempelmetod (demo) ===
+    /// <summary>
+    /// Simple ping/health probe. Returns raw string payload from the endpoint.
+    /// </summary>
     public async Task<string> PingAsync(CancellationToken ct = default)
     {
-        _logger?.LogInformation("Calling Ping endpoint...");
-        var res = await _http.GetAsync("/ping", ct);
+        _logger?.LogInformation("Calling /ping...");
+        using var res = await _http.GetAsync("/ping", ct).ConfigureAwait(false);
         res.EnsureSuccessStatusCode();
-        var payload = await res.Content.ReadAsStringAsync(ct);
-        _logger?.LogInformation("Ping OK, length={Length}", payload.Length);
+        var payload = await res.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+        _logger?.LogInformation("Ping OK (bytes={Length}).", payload.Length);
         return payload;
     }
 
-    // === ISwishClient-implementation (payments) ===
+    /// <summary>
+    /// Creates a Swish payment. Adds an Idempotency-Key header automatically.
+    /// </summary>
     public async Task<CreatePaymentResponse> CreatePaymentAsync(CreatePaymentRequest request, CancellationToken ct = default)
     {
-        var json = JsonSerializer.Serialize(request, _json);
-        using var msg = new HttpRequestMessage(HttpMethod.Post, "/payments")
-        {
-            Content = new StringContent(json, Encoding.UTF8, "application/json")
-        };
-        return await SendWithPolicyAsync<CreatePaymentResponse>(msg, isCreate: true, ct);
+        var json = JsonSerializer.Serialize(request, DefaultJsonSerializerOptions);
+        return await SendWithPolicyAsync<CreatePaymentResponse>(
+            () => new HttpRequestMessage(HttpMethod.Post, "/payments")
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json")
+            },
+            isCreate: true,
+            ct: ct).ConfigureAwait(false);
     }
 
-    // OBS: matchar ditt interface (returnerar CreatePaymentResponse)
+    /// <summary>
+    /// Gets the status of a previously created payment.
+    /// </summary>
     public async Task<CreatePaymentResponse> GetPaymentStatusAsync(string paymentId, CancellationToken ct = default)
     {
-        using var msg = new HttpRequestMessage(HttpMethod.Get, $"/payments/{paymentId}");
-        return await SendWithPolicyAsync<CreatePaymentResponse>(msg, isCreate: false, ct);
+        return await SendWithPolicyAsync<CreatePaymentResponse>(
+            () => new HttpRequestMessage(HttpMethod.Get, $"/payments/{paymentId}"),
+            isCreate: false,
+            ct: ct).ConfigureAwait(false);
     }
 
-    // === ISwishClient-implementation (refunds) ===
+    /// <summary>
+    /// Creates a refund for a previously created payment. Adds an Idempotency-Key header automatically.
+    /// </summary>
     public async Task<CreateRefundResponse> CreateRefundAsync(CreateRefundRequest request, CancellationToken ct = default)
     {
-        var json = JsonSerializer.Serialize(request, _json);
-        using var msg = new HttpRequestMessage(HttpMethod.Post, "/refunds")
-        {
-            Content = new StringContent(json, Encoding.UTF8, "application/json")
-        };
-        return await SendWithPolicyAsync<CreateRefundResponse>(msg, isCreate: true, ct);
+        var json = JsonSerializer.Serialize(request, DefaultJsonSerializerOptions);
+        return await SendWithPolicyAsync<CreateRefundResponse>(
+            () => new HttpRequestMessage(HttpMethod.Post, "/refunds")
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json")
+            },
+            isCreate: true,
+            ct: ct).ConfigureAwait(false);
     }
 
-    // OBS: matchar ditt interface (returnerar CreateRefundResponse)
+    /// <summary>
+    /// Gets the status of a previously created refund.
+    /// </summary>
     public async Task<CreateRefundResponse> GetRefundStatusAsync(string refundId, CancellationToken ct = default)
     {
-        using var msg = new HttpRequestMessage(HttpMethod.Get, $"/refunds/{refundId}");
-        return await SendWithPolicyAsync<CreateRefundResponse>(msg, isCreate: false, ct);
+        return await SendWithPolicyAsync<CreateRefundResponse>(
+            () => new HttpRequestMessage(HttpMethod.Get, $"/refunds/{refundId}"),
+            isCreate: false,
+            ct: ct).ConfigureAwait(false);
     }
 }
+

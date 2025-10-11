@@ -1,20 +1,28 @@
-using System.Security.Cryptography.X509Certificates;
+using System;
 
 namespace NordAPI.Swish;
 
+/// <summary>
+/// Options for configuring client certificate (mTLS) loading for Swish HTTP calls.
+/// When both <see cref="PfxPath"/> and <see cref="PfxPassword"/> are provided, the SDK
+/// attempts to load a client certificate for mutual TLS.
+/// </summary>
 public sealed class SwishCertificateOptions
 {
-    /// <summary>Full path till en PFX-fil (lokalt/dev).</summary>
+    /// <summary>
+    /// Absolute or relative file path to a .pfx client certificate. If null or empty,
+    /// mTLS is not enabled and the SDK falls back to a non-mTLS HttpClient.
+    /// </summary>
     public string? PfxPath { get; set; }
 
-    /// <summary>Lösenord för PFX-filen.</summary>
+    /// <summary>
+    /// Password used to decrypt the PFX. Required if <see cref="PfxPath"/> is set.
+    /// </summary>
     public string? PfxPassword { get; set; }
 
-    /// <summary>Om du redan har laddat certet externt.</summary>
-    public X509Certificate2? Certificate { get; set; }
-
     /// <summary>
-    /// Om sant: tillåt även privata nycklar i icke-exportabla contexts (t.ex. CNG).
+    /// For local development only: allows relaxed server certificate validation in DEBUG.
+    /// Never enable this in production.
     /// </summary>
-    public bool AllowInvalidChainForDev { get; set; } = false; // endast för lokal dev
+    public bool AllowInvalidChainForDev { get; set; } = false;
 }

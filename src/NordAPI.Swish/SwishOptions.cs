@@ -2,17 +2,28 @@ using System;
 
 namespace NordAPI.Swish;
 
+/// <summary>
+/// Core configuration for the Swish client.
+/// </summary>
 public sealed class SwishOptions
 {
-    /// <summary>Bas-URL till Swish API (eller stub/testmiljö).</summary>
+    /// <summary>
+    /// Base address of the Swish API (e.g., sandbox/test endpoint).
+    /// </summary>
     public Uri? BaseAddress { get; set; }
 
-    /// <summary>Publik nyckel/identifierare för HMAC.</summary>
+    /// <summary>
+    /// Public API key identifier used for HMAC authentication.
+    /// </summary>
     public string? ApiKey { get; set; }
 
-    /// <summary>Delad hemlighet för HMAC-signering.</summary>
+    /// <summary>
+    /// Shared secret used to compute/verify HMAC signatures.
+    /// </summary>
     public string? Secret { get; set; }
 
-    /// <summary>Valfri timeout för HttpClient (om du vill använda den senare).</summary>
-    public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(100);
+    /// <summary>
+    /// Optional mTLS options (PFX path, password, dev relax setting).
+    /// </summary>
+    public SwishCertificateOptions? Certificate { get; set; }
 }

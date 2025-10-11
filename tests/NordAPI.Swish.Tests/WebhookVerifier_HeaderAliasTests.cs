@@ -9,8 +9,7 @@ using Xunit;
 namespace NordAPI.Swish.Tests
 {
     /// <summary>
-    /// Ensures that SwishWebhookVerifier accepts both official Swish headers
-    /// and their common alias counterparts.
+    /// Ensures the verifier accepts alias header names for timestamp/signature/nonce.
     /// </summary>
     public class WebhookVerifier_HeaderAliasTests
     {

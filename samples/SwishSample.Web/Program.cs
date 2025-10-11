@@ -1,22 +1,30 @@
-﻿using System.Globalization;
-using System.Text;
+﻿// samples/SwishSample.Web/Program.cs
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
-using System.Linq;
+using System.Net.Http;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
 using NordAPI.Swish;
 using NordAPI.Swish.DependencyInjection;
 using NordAPI.Swish.Webhooks;
-using System.Net.Http;
-using System.Security.Cryptography.X509Certificates;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// -------------------------------------------------------------
-// Swish SDK client (ENV-driven base address + HMAC), mTLS via env/cert
-// -------------------------------------------------------------
-var envName = Environment.GetEnvironmentVariable("SWISH_ENV") ?? ""; // TEST | PROD (optional)
+// -----------------------------------------------------------------------------
+// Swish SDK client registration (ENV-driven base address + HMAC). mTLS is
+// applied inside the SDK's HTTP handler factory via environment variables.
+// -----------------------------------------------------------------------------
+var envName = Environment.GetEnvironmentVariable("SWISH_ENV") ?? ""; // optional: TEST | PROD
 var baseUrl =
     Environment.GetEnvironmentVariable("SWISH_BASE_URL") ??
     (string.Equals(envName, "TEST", StringComparison.OrdinalIgnoreCase)
@@ -35,10 +43,10 @@ builder.Services.AddSwishClient(opts =>
     opts.Secret = Environment.GetEnvironmentVariable("SWISH_SECRET") ?? "dev-secret";
 });
 
-// -------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Nonce store (replay protection):
-// Use Redis if SWISH_REDIS (or alias) is set; otherwise InMemory (dev).
-// -------------------------------------------------------------
+// Use Redis if SWISH_REDIS (or aliases) is set; otherwise fall back to in-memory for dev.
+// -----------------------------------------------------------------------------
 var redisConn =
     Environment.GetEnvironmentVariable("SWISH_REDIS")
     ?? Environment.GetEnvironmentVariable("REDIS_URL")
@@ -55,10 +63,9 @@ else
         new InMemoryNonceStore(TimeSpan.FromMinutes(5)));
 }
 
-// -------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Webhook verifier — requires SWISH_WEBHOOK_SECRET
-// -------------------------------------------------------------
-
+// -----------------------------------------------------------------------------
 builder.Services.AddSingleton(sp =>
 {
     var cfg = sp.GetRequiredService<IConfiguration>();
@@ -78,24 +85,27 @@ builder.Services.AddSingleton(sp =>
 
 var app = builder.Build();
 
+// -----------------------------------------------------------------------------
 // Small helper endpoints
+// -----------------------------------------------------------------------------
 app.MapGet("/", () =>
-    "Swish sample is running. Try /health, /di-check, /ping, or POST /webhook/swish").AllowAnonymous();
+    "Swish sample is running. Try /health, /di-check, /ping, or POST /webhook/swish");
 
-app.MapGet("/health", () => "ok").AllowAnonymous();
+app.MapGet("/health", () => "ok");
 
 app.MapGet("/di-check", (ISwishClient swish) =>
-    swish is not null ? "ISwishClient is registered" : "not found").AllowAnonymous();
+    swish is not null ? "ISwishClient is registered" : "not found");
 
-app.MapGet("/ping", () => Results.Ok("pong (mocked)")).AllowAnonymous();
+// Simple mocked ping for local testing (does not call external HTTP)
+app.MapGet("/ping", () => Results.Ok("pong (mocked)"));
 
-// -------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Webhook endpoint (hardened):
 // - Enforce HTTPS outside Development
-// - Timestamp skew ±5 min (can relax via SWISH_ALLOW_OLD_TS=1 in Development)
+// - Timestamp skew ±5 minutes (can relax via SWISH_ALLOW_OLD_TS=1 in Development)
 // - Replay protection via nonce store
-// - Structured logging (signatures are never fully logged)
-// -------------------------------------------------------------
+// - Structured logging (never log raw signatures/secrets)
+// -----------------------------------------------------------------------------
 app.MapPost("/webhook/swish", async (
     HttpRequest req,
     [FromServices] SwishWebhookVerifier verifier,
@@ -105,26 +115,27 @@ app.MapPost("/webhook/swish", async (
     var log = loggerFactory.CreateLogger("Swish.Webhook");
     var isDev = hostEnv.IsDevelopment();
 
-    // 1) Require HTTPS when not in Development
+  // 1) Require HTTPS when not in Development
     if (!isDev && !req.IsHttps)
     {
-        log.LogWarning("Webhook rejected due to non-HTTPS in non-Development environment.");
-        return Results.StatusCode(400);
+    log.LogWarning("Webhook rejected due to non-HTTPS in non-Development environment.");
+    return Results.BadRequest(new { reason = "https-required" }); // <-- 400 instead of 403
     }
 
-    // 2) Optional skew relaxation only for Development
+
+    // 2) Optional skew relaxation only for Development (opt-in with env var)
     var allowOldTsEnv = string.Equals(
         Environment.GetEnvironmentVariable("SWISH_ALLOW_OLD_TS"), "1", StringComparison.Ordinal);
     var allowOldInThisRequest = isDev && allowOldTsEnv;
 
+    // Read raw body (preserve stream)
     req.EnableBuffering();
-
     string rawBody;
     using (var reader = new StreamReader(req.Body, Encoding.UTF8, detectEncodingFromByteOrderMarks: false, leaveOpen: true))
         rawBody = (await reader.ReadToEndAsync()) ?? string.Empty;
     req.Body.Position = 0;
 
-    // Headers (with common aliases)
+    // Required headers (aliases allowed)
     var tsHeader = ValueOr(req.Headers["X-Swish-Timestamp"], req.Headers["X-Timestamp"]);
     var sigHeader = ValueOr(req.Headers["X-Swish-Signature"], req.Headers["X-Signature"]);
     var nonce = ValueOr(req.Headers["X-Swish-Nonce"], req.Headers["X-Nonce"]);
@@ -136,6 +147,7 @@ app.MapPost("/webhook/swish", async (
         return Results.BadRequest(new { reason = "missing-headers" });
     }
 
+    // Parse timestamp
     if (!TryParseTimestamp(tsHeader, out var ts))
     {
         log.LogWarning("Webhook bad timestamp format. Raw='{Raw}'", tsHeader);
@@ -154,7 +166,7 @@ app.MapPost("/webhook/swish", async (
         return Results.Json(new { reason = "timestamp-skew" }, statusCode: 401);
     }
 
-    // 4) Verify signature + replay via nonce
+    // 4) Verify signature + replay (nonce must be fresh)
     var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
     {
         ["X-Swish-Timestamp"] = tsHeader,
@@ -165,7 +177,7 @@ app.MapPost("/webhook/swish", async (
     var result = verifier.Verify(rawBody, headers, now);
     if (!result.Success)
     {
-        // Mask signature in logs — never log secrets or raw signature values
+        // Mask raw signature in logs — never log secrets or raw signature values
         log.LogWarning("Webhook verification failed. Reason='{Reason}', Nonce='{Nonce}'",
             result.Reason ?? "sig-or-replay-failed", nonce ?? "(none)");
 
@@ -174,17 +186,22 @@ app.MapPost("/webhook/swish", async (
 
     log.LogInformation("Webhook accepted. Nonce='{Nonce}'", nonce ?? "(none)");
     return Results.Ok(new { received = true });
-}).AllowAnonymous();
+});
 
 app.Run();
 
-static string ValueOr(string v1, string v2) => string.IsNullOrWhiteSpace(v1) ? v2 : v1;
+// -----------------------------------------------------------------------------
+// Helpers
+// -----------------------------------------------------------------------------
+static string ValueOr(StringValues v1, StringValues v2)
+    => string.IsNullOrWhiteSpace(v1) ? v2.ToString() : v1.ToString();
 
 static bool TryParseTimestamp(string tsHeader, out DateTimeOffset ts)
 {
+    // Support: Unix seconds, Unix milliseconds, ISO-8601
     if (long.TryParse(tsHeader, out var num))
     {
-        if (tsHeader.Length >= 13)
+        if (tsHeader.Length >= 13) // millis
         {
             ts = DateTimeOffset.FromUnixTimeMilliseconds(num).ToUniversalTime();
             return true;
@@ -207,5 +224,7 @@ static bool TryParseTimestamp(string tsHeader, out DateTimeOffset ts)
     return false;
 }
 
+// Expose Program for WebApplicationFactory<T> in tests
 public partial class Program { }
+
 
