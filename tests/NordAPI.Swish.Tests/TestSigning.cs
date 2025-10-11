@@ -1,13 +1,29 @@
-﻿using NordAPI.Swish.DependencyInjection;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace NordAPI.Swish.Tests
 {
+    /// <summary>
+    /// Provides helper methods for generating valid Swish HMAC headers for test and integration purposes.
+    /// </summary>
     internal static class TestSigning
     {
-        public static (Dictionary<string,string> Headers, string Message) MakeHeaders(
+        /// <summary>
+        /// Creates a complete set of Swish webhook headers (timestamp, nonce, signature) for testing purposes.
+        /// </summary>
+        /// <param name="secret">The shared HMAC secret used for signature computation.</param>
+        /// <param name="body">The raw request body to be signed.</param>
+        /// <param name="ts">The timestamp to include in the header.</param>
+        /// <param name="nonce">Optional unique identifier. If omitted, a new GUID (N-format) will be generated.</param>
+        /// <param name="useIsoTimestamp">
+        /// Determines the timestamp format. 
+        /// True → ISO 8601 (default). False → Unix seconds.
+        /// </param>
+        /// <returns>
+        /// A tuple containing the generated headers and the canonical message used for signature computation.
+        /// </returns>
+        public static (Dictionary<string, string> Headers, string Message) MakeHeaders(
             string secret,
             string body,
             DateTimeOffset ts,
@@ -16,7 +32,7 @@ namespace NordAPI.Swish.Tests
         {
             var tsStr = useIsoTimestamp
                 ? ts.ToUniversalTime().ToString("o")   // ISO 8601
-                : ts.ToUnixTimeSeconds().ToString();    // Unix sekunder
+                : ts.ToUnixTimeSeconds().ToString();    // Unix seconds
 
             var finalNonce = nonce ?? Guid.NewGuid().ToString("N");
             var message = $"{tsStr}\n{finalNonce}\n{body}";
@@ -31,7 +47,7 @@ namespace NordAPI.Swish.Tests
                 ["X-Swish-Nonce"]     = finalNonce,
                 ["X-Swish-Signature"] = sig,
 
-                // fallback-namn som sample-servern accepterar:
+                // Fallback aliases accepted by the sample server:
                 ["X-Timestamp"] = tsStr,
                 ["X-Nonce"]     = finalNonce,
                 ["X-Signature"] = sig
@@ -41,5 +57,6 @@ namespace NordAPI.Swish.Tests
         }
     }
 }
+
 
 

@@ -8,101 +8,132 @@ using Xunit;
 
 namespace NordAPI.Swish.Tests
 {
+    /// <summary>
+    /// Negative test cases for SwishWebhookVerifier to ensure invalid requests are rejected.
+    /// </summary>
     public class WebhookVerifier_NegativeTests
     {
         private const string Secret = "dev_secret";
 
+        /// <summary>
+        /// Creates a SwishWebhookVerifier with default options for testing.
+        /// </summary>
         private SwishWebhookVerifier CreateVerifier() =>
             new SwishWebhookVerifier(
                 new SwishWebhookVerifierOptions
                 {
-                    SharedSecret = Secret,
-                    AllowedClockSkew = TimeSpan.FromMinutes(5),
-                    MaxMessageAge   = TimeSpan.FromMinutes(10),
+                    SharedSecret        = Secret,
+                    AllowedClockSkew    = TimeSpan.FromMinutes(5),
+                    MaxMessageAge       = TimeSpan.FromMinutes(10),
                     SignatureHeaderName = "X-Swish-Signature",
                     TimestampHeaderName = "X-Swish-Timestamp",
-                    NonceHeaderName     = "X-Swish-Nonce",
+                    NonceHeaderName     = "X-Swish-Nonce"
                 },
                 new InMemoryNonceStore()
             );
 
+        /// <summary>
+        /// Builds a headers dictionary containing:
+        ///  - ISO-8601 timestamp
+        ///  - nonce
+        ///  - Base64-encoded HMAC-SHA256 signature
+        /// Includes both primary and alias header names to support removal tests.
+        /// </summary>
         private static Dictionary<string, string> MakeHeaders(
             string secret,
             string body,
             DateTimeOffset ts,
             string? nonce = null)
         {
-            var tsStr      = ts.ToUniversalTime().ToString("o");
+            var timestamp  = ts.ToUniversalTime().ToString("o");
             var finalNonce = nonce ?? Guid.NewGuid().ToString("N");
-            var message    = $"{tsStr}\n{finalNonce}\n{body}";
+            var message    = $"{timestamp}\n{finalNonce}\n{body}";
             var key        = Encoding.UTF8.GetBytes(secret);
-            using var hmac = new System.Security.Cryptography.HMACSHA256(key);
-            var sig        = Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(message)));
 
-            // Lägger både primära och alias för att kunna testa borttagning av båda
+            using var hmac = new System.Security.Cryptography.HMACSHA256(key);
+            var signature  = Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(message)));
+
             return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
-                ["X-Swish-Timestamp"] = tsStr,
+                ["X-Swish-Timestamp"] = timestamp,
                 ["X-Swish-Nonce"]     = finalNonce,
-                ["X-Swish-Signature"] = sig,
+                ["X-Swish-Signature"] = signature,
 
-                ["X-Timestamp"] = tsStr,
-                ["X-Nonce"]     = finalNonce,
-                ["X-Signature"] = sig
+                ["X-Timestamp"]       = timestamp,
+                ["X-Nonce"]           = finalNonce,
+                ["X-Signature"]       = signature
             };
         }
 
         [Fact]
         public void Verify_ShouldFail_WhenSignatureDoesNotMatch_Secret()
         {
-            var body = "{\"id\":\"abc123\",\"amount\":100}";
-            var ts   = DateTimeOffset.UtcNow;
+            // Arrange: headers signed with wrong secret
+            var body      = "{\"id\":\"abc123\",\"amount\":100}";
+            var timestamp = DateTimeOffset.UtcNow;
+            var headers   = MakeHeaders("WRONG_SECRET", body, timestamp);
 
-            var hdrs = MakeHeaders("WRONG_SECRET", body, ts); // fel hemlighet
             var verifier = CreateVerifier();
 
-            var result = verifier.Verify(body, hdrs, ts);
+            // Act
+            var result   = verifier.Verify(body, headers, timestamp);
 
-            result.Success.Should().BeFalse();
-            result.Reason!.ToLowerInvariant().Should().ContainAny("signatur", "signature", "mismatch", "invalid");
+            // Assert: signature validation must fail
+            result.Success
+                  .Should().BeFalse();
+            result.Reason!
+                  .ToLowerInvariant()
+                  .Should().ContainAny("signature", "mismatch", "invalid", "signatur");
         }
 
         [Fact]
         public void Verify_ShouldFail_WhenBodyIsAltered_AfterSigning()
         {
-            var bodyOriginal = "{\"id\":\"abc123\",\"amount\":100}";
-            var bodyAltered  = "{\"id\":\"abc123\",\"amount\":999}";
-            var ts = DateTimeOffset.UtcNow;
+            // Arrange: sign original body, then verify with altered body
+            var originalBody = "{\"id\":\"abc123\",\"amount\":100}";
+            var alteredBody  = "{\"id\":\"abc123\",\"amount\":999}";
+            var timestamp    = DateTimeOffset.UtcNow;
+            var headers      = MakeHeaders(Secret, originalBody, timestamp);
 
-            var hdrs = MakeHeaders(Secret, bodyOriginal, ts);
             var verifier = CreateVerifier();
 
-            var result = verifier.Verify(bodyAltered, hdrs, ts);
+            // Act
+            var result   = verifier.Verify(alteredBody, headers, timestamp);
 
-            result.Success.Should().BeFalse();
-            result.Reason!.ToLowerInvariant().Should().ContainAny("signatur", "signature", "mismatch", "invalid");
+            // Assert: HMAC mismatch must be detected
+            result.Success
+                  .Should().BeFalse();
+            result.Reason!
+                  .ToLowerInvariant()
+                  .Should().ContainAny("signature", "mismatch", "invalid");
         }
 
         [Fact]
         public void Verify_ShouldFail_WhenRequiredHeaderMissing()
         {
-            var body = "{\"id\":\"abc123\",\"amount\":100}";
-            var ts   = DateTimeOffset.UtcNow;
+            // Arrange: remove signature headers from an otherwise valid request
+            var body      = "{\"id\":\"abc123\",\"amount\":100}";
+            var timestamp = DateTimeOffset.UtcNow;
+            var headers   = MakeHeaders(Secret, body, timestamp);
 
-            var hdrs = MakeHeaders(Secret, body, ts);
-
-            // Ta bort signatur helt (både primär och alias)
-            hdrs.Remove("X-Swish-Signature");
-            hdrs.Remove("X-Signature");
+            headers.Remove("X-Swish-Signature");
+            headers.Remove("X-Signature");
 
             var verifier = CreateVerifier();
-            var result = verifier.Verify(body, hdrs, ts);
 
-            result.Success.Should().BeFalse();
-            result.Reason!.ToLowerInvariant().Should().ContainAny("saknar", "missing", "signatur", "signature");
+            // Act
+            var result   = verifier.Verify(body, headers, timestamp);
+
+            // Assert: missing header should cause failure
+            result.Success
+                  .Should().BeFalse();
+            result.Reason!
+                  .ToLowerInvariant()
+                  .Should().ContainAny("missing", "signature", "signatur", "saknar");
         }
     }
 }
+
 
 
 

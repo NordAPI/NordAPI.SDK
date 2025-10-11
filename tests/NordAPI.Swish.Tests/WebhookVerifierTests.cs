@@ -12,6 +12,7 @@ namespace NordAPI.Swish.Tests
     {
         private const string Secret = "dev_secret";
 
+        // Creates a configured instance of the verifier with default options
         private SwishWebhookVerifier CreateVerifier()
         {
             return new SwishWebhookVerifier(
@@ -42,7 +43,7 @@ namespace NordAPI.Swish.Tests
         public void Verify_ShouldFail_WhenTimestampTooOld()
         {
             var body    = "{\"id\":\"abc123\",\"amount\":100}";
-            var tsOld   = DateTimeOffset.UtcNow.AddMinutes(-15); // äldre än MaxMessageAge/skew
+            var tsOld   = DateTimeOffset.UtcNow.AddMinutes(-15); // older than MaxMessageAge + skew
             var headers = TestHelper.MakeHeadersIso(Secret, body, tsOld);
 
             var verifier = CreateVerifier();
@@ -56,18 +57,18 @@ namespace NordAPI.Swish.Tests
         [Fact]
         public void Verify_ShouldFail_WhenBodyChanged()
         {
-            // Arrange – signera med original-body
+            // Arrange – sign with original body
             var bodyOriginal = "{\"id\":\"abc123\",\"amount\":100}";
             var ts           = DateTimeOffset.UtcNow;
             var headers      = TestHelper.MakeHeadersIso(Secret, bodyOriginal, ts);
 
-            // Act – verifiera med ÄNDRAD body
+            // Act – verify with tampered body
             var bodyTampered = "{\"id\":\"abc123\",\"amount\":999}";
 
             var verifier = CreateVerifier();
             var result   = verifier.Verify(bodyTampered, headers, ts);
 
-            // Assert – ska falla pga HMAC mismatch
+            // Assert – should fail due to HMAC mismatch
             result.Success.Should().BeFalse();
             if (!string.IsNullOrEmpty(result.Reason))
                 result.Reason!.ToLowerInvariant().Should().ContainAny("signature", "sig", "hmac", "mac");
@@ -98,8 +99,9 @@ namespace NordAPI.Swish.Tests
     internal static class TestHelper
     {
         /// <summary>
-        /// Bygger headers där timestampen är ISO-8601 (UTC "o"), canonical = ts \n nonce \n body
-        /// och signaturen är HMAC-SHA256 (Base64) över canonical.
+        /// Builds headers with ISO-8601 timestamp, nonce, and HMAC-SHA256 signature.
+        /// Canonical format: timestamp\nnonce\nbody
+        /// Signature is Base64-encoded HMAC over canonical string.
         /// </summary>
         public static Dictionary<string, string> MakeHeadersIso(
             string secret,
@@ -107,7 +109,7 @@ namespace NordAPI.Swish.Tests
             DateTimeOffset ts,
             string? nonce = null)
         {
-            var tsStr      = ts.ToUniversalTime().ToString("o"); // ISO-8601
+            var tsStr      = ts.ToUniversalTime().ToString("o"); // ISO-8601 format
             var finalNonce = nonce ?? Guid.NewGuid().ToString("N");
 
             var message = $"{tsStr}\n{finalNonce}\n{body}";
@@ -120,7 +122,7 @@ namespace NordAPI.Swish.Tests
                 ["X-Swish-Timestamp"] = tsStr,
                 ["X-Swish-Nonce"]     = finalNonce,
                 ["X-Swish-Signature"] = sig,
-                // fallback-namn som vår verifierare/server också accepterar
+                // Fallback header names accepted by verifier/server
                 ["X-Timestamp"]       = tsStr,
                 ["X-Nonce"]           = finalNonce,
                 ["X-Signature"]       = sig
@@ -128,6 +130,7 @@ namespace NordAPI.Swish.Tests
         }
     }
 }
+
 
 
 

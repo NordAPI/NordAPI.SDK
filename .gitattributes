@@ -1,27 +1,40 @@
-﻿# Normalize line endings in repo (LF), checkout native for each OS
+﻿# ------------------------------------------------------------
+# Core normalization: use LF in repo, native line endings on checkout
+# ------------------------------------------------------------
 *         text=auto
 
-# Windows scripts
+# ------------------------------------------------------------
+# Windows scripts: force CRLF in repo to ensure compatibility
+# ------------------------------------------------------------
 *.ps1     text eol=crlf
 *.bat     text eol=crlf
 
-# C# / MSBuild projects (normalize, don't force CRLF in repo)
+# ------------------------------------------------------------
+# C# / MSBuild projects: normalize line endings (LF in repo), 
+# but allow native checkout (don't force CRLF)
+# ------------------------------------------------------------
 *.cs      text
 *.csproj  text
 *.sln     text
 *.props   text
 *.targets text
 
-# Unix shell scripts
+# ------------------------------------------------------------
+# Unix shell scripts: enforce LF line endings for consistency
+# ------------------------------------------------------------
 *.sh      text eol=lf
 *.bash    text eol=lf
 
-# GitHub Actions / CI configs
-*.yml     text eol=lf
-*.yaml    text eol=lf
-.github/** text eol=lf
+# ------------------------------------------------------------
+# CI/CD configs and GitHub workflows: LF for cross-platform compatibility
+# ------------------------------------------------------------
+*.yml        text eol=lf
+*.yaml       text eol=lf
+.github/**   text eol=lf
 
-# Binary / secrets (never touched)
+# ------------------------------------------------------------
+# Binary files and secrets: mark as binary to prevent line-ending changes
+# ------------------------------------------------------------
 *.png     binary
 *.jpg     binary
 *.jpeg    binary
@@ -33,4 +46,5 @@
 *.cer     binary
 *.crt     binary
 *.key     binary
+
 

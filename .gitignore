@@ -1,18 +1,18 @@
-﻿# Build-output
+﻿# Build output
 bin/
 obj/
 
-# IDE
+# IDE/editor files
 .vscode/
 .vs/
 *.user
 *.suo
 
-# Test-output
+# Test output
 TestResults/
 coveragereport/
 
-# Certifikat (ska aldrig in i repo)
+# Certificates and private keys - NEVER commit these
 *.pfx
 *.p12
 *.pem
@@ -20,12 +20,19 @@ coveragereport/
 *.crt
 *.cer
 
-# Lokala hjälpfiler
+# Local helper files used by samples/tools
 body.json
 
-# Artifacts från packning/CI – ignorera allt men behåll mappen
+# CI/pack artifacts - ignore everything but keep marker files in the folder
 artifacts/**
 !artifacts/README.md
 !artifacts/.gitkeep
 
-NordAPI.SwishSdk/
+# Optional: NuGet packages folder (uncomment if using a local packages folder)
+# .nuget/packages/
+
+# Optional: Rider/JetBrains IDE files
+# .idea/
+
+# Optional: dotnet user-secrets (store secrets outside repo)
+# /secrets.json

@@ -1,41 +1,57 @@
 <Project>
   <PropertyGroup>
+    <!-- Company / package authors -->
     <Company>NordAPI</Company>
     <Authors>NordAPI</Authors>
 
+    <!-- Repository and package URLs -->
     <RepositoryUrl>https://github.com/NordAPI/NordAPI.SwishSdk</RepositoryUrl>
     <PackageProjectUrl>https://github.com/NordAPI/NordAPI.SwishSdk</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
 
+    <!-- Licensing and package metadata -->
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>swish;payments;sdk;nordapi</PackageTags>
 
-    <!-- Huvudbiblioteket får XML-doc (bra för NuGet) -->
+    <!-- Generate XML documentation for NuGet and IDE intellisense -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
-    <!-- Symbols -->
+    <!-- Include symbol package (snupkg) for debugging support -->
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
 
-    <!-- README visas på NuGet; själva filen packas via .csproj -->
+    <!-- README displayed on NuGet; ensure README.md is included in the package -->
     <PackageReadmeFile>README.md</PackageReadmeFile>
 
-    <!-- Bygg-kvalitet -->
+    <!-- Build quality: deterministic builds and CI-friendly flags -->
     <Deterministic>true</Deterministic>
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <!-- Warnings-as-errors is disabled for MVP to reduce friction; enable later if desired -->
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 
-    <!-- VERSION FÖR DENNA RELEASE -->
+    <!-- Version for this release (update for each release) -->
     <Version>1.0.2</Version>
   </PropertyGroup>
 
-  <!-- Tysta CS1591-varningar i Debug -->
+  <!-- Suppress missing XML comment warnings in Debug builds (helps local development) -->
   <PropertyGroup Condition="'$(Configuration)'=='Debug'">
     <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
 
-  <!-- Tysta CS1591-varningar i Release (tillfälligt för MVP) -->
+  <!-- Suppress missing XML comment warnings in Release builds for MVP.
+       Consider removing this when public API documentation is complete. -->
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
     <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <!-- Ensure README.md is packed into the NuGet package root -->
+  <ItemGroup>
+    <None Update="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <!-- Recommended: pin SDK target (net8.0) and optional langversion for consistency -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>preview</LangVersion>
   </PropertyGroup>
 </Project>
