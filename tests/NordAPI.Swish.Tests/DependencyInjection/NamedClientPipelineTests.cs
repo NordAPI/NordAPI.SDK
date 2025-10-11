@@ -6,28 +6,31 @@ using NordAPI.Swish.DependencyInjection;
 
 namespace NordAPI.Swish.Tests.DependencyInjection
 {
+    // Ensures AddSwishClient wires ISwishClient into the "Swish" HTTP pipeline
     public class NamedClientPipelineTests
     {
         [Fact]
-        public void AddSwishClient_WiresTypedClient_ToNamedClient_Swish()
+        public void AddSwishClient_RegistersTypedClientWithSwishPipeline()
         {
+            // Arrange: configure DI with mTLS transport pipeline
             var services = new ServiceCollection();
-
-            // Opt-in named client (utan cert → vanlig handler, men named pipeline finns)
             services.AddSwishMtlsTransport();
 
+            // Act: register the typed SwishClient with API options
             services.AddSwishClient(opts =>
             {
                 opts.BaseAddress = new Uri("https://example.invalid");
-                opts.ApiKey = "dev-key";
-                opts.Secret = "dev-secret";
+                opts.ApiKey      = "dev-key";
+                opts.Secret      = "dev-secret";
             });
 
-            var sp = services.BuildServiceProvider();
-            var client = sp.GetRequiredService<ISwishClient>();
+            // Build the provider and resolve the client
+            using var provider = services.BuildServiceProvider();
+            var client = provider.GetRequiredService<ISwishClient>();
 
+            // Assert: DI successfully provides a non-null SwishClient
             Assert.NotNull(client);
-            // Mer avancerad verifikation kräver introspektion eller e2e – här räcker det att DI lyckas.
         }
     }
 }
+

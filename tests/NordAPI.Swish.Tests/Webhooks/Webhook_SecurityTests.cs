@@ -9,80 +9,93 @@ using Xunit;
 namespace NordAPI.Swish.Tests
 {
     /// <summary>
-    /// Minimal security tests for the webhook:
-    /// - Rejects large timestamp skew when not explicitly allowed.
-    /// - Requires HTTPS in non-Development environments.
+    /// Tests for Swish webhook security:
+    /// - Rejects requests with excessive timestamp skew.
+    /// - Enforces HTTPS in non-development environments.
     /// </summary>
-    public class Webhook_SecurityTests : IClassFixture<WebApplicationFactory<Program>>
+    public class WebhookSecurityTests : IClassFixture<WebApplicationFactory<Program>>
     {
         private readonly WebApplicationFactory<Program> _factory;
 
-        public Webhook_SecurityTests(WebApplicationFactory<Program> factory)
+        public WebhookSecurityTests(WebApplicationFactory<Program> factory)
         {
-            // Default test host runs in Development (HTTP allowed).
+            // Test host runs in Development by default (HTTP allowed).
             _factory = factory.WithWebHostBuilder(_ => { });
         }
 
+        /// <summary>
+        /// Ensures that a request with a timestamp older than allowed skew returns 401 Unauthorized.
+        /// </summary>
         [Fact]
-        public async Task Webhook_Rejects_Skew_Over_5_Min_When_Not_Allowed()
+        public async Task RejectsRequestWhenTimestampIsTooOld()
         {
-            // Arrange: timestamp 10 minutes in the past
-            var client = _factory.CreateClient();
-
-            var tooOld = DateTimeOffset.UtcNow.AddMinutes(-10).ToUnixTimeSeconds().ToString();
-            var nonce = Guid.NewGuid().ToString("N");
-            var body = "{\"id\":\"skew-test\",\"amount\":10}";
-            var msg = $"{tooOld}\n{nonce}\n{body}";
-            var secret = "dev_secret";
-            var sig = Convert.ToBase64String(
+            // Arrange
+            var client         = _factory.CreateClient();
+            var tooOld         = DateTimeOffset.UtcNow.AddMinutes(-10).ToUnixTimeSeconds().ToString();
+            var nonce          = Guid.NewGuid().ToString("N");
+            var body           = "{\"id\":\"skew-test\",\"amount\":10}";
+            var messagePayload = $"{tooOld}\n{nonce}\n{body}";
+            var secret         = "dev_secret";
+            var signature      = Convert.ToBase64String(
                 new System.Security.Cryptography.HMACSHA256(Encoding.UTF8.GetBytes(secret))
-                    .ComputeHash(Encoding.UTF8.GetBytes(msg)));
+                    .ComputeHash(Encoding.UTF8.GetBytes(messagePayload))
+            );
 
-            var req = new HttpRequestMessage(HttpMethod.Post, "/webhook/swish");
-            req.Content = new StringContent(body, Encoding.UTF8, "application/json");
-            req.Headers.TryAddWithoutValidation("X-Swish-Timestamp", tooOld);
-            req.Headers.TryAddWithoutValidation("X-Swish-Nonce", nonce);
-            req.Headers.TryAddWithoutValidation("X-Swish-Signature", sig);
+            var request = new HttpRequestMessage(HttpMethod.Post, "/webhook/swish")
+            {
+                Content = new StringContent(body, Encoding.UTF8, "application/json")
+            };
+            request.Headers.TryAddWithoutValidation("X-Swish-Timestamp", tooOld);
+            request.Headers.TryAddWithoutValidation("X-Swish-Nonce", nonce);
+            request.Headers.TryAddWithoutValidation("X-Swish-Signature", signature);
 
             Environment.SetEnvironmentVariable("SWISH_WEBHOOK_SECRET", secret);
-            Environment.SetEnvironmentVariable("SWISH_ALLOW_OLD_TS", null); // not allowed
+            Environment.SetEnvironmentVariable("SWISH_ALLOW_OLD_TS", null);
 
             // Act
-            var res = await client.SendAsync(req);
+            var response = await client.SendAsync(request);
 
             // Assert
-            Assert.Equal(HttpStatusCode.Unauthorized, res.StatusCode);
+            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         }
 
+        /// <summary>
+        /// Ensures that HTTP requests are rejected with 400 BadRequest in Production (HTTPS required).
+        /// </summary>
         [Fact]
-        public async Task Webhook_Requires_Https_In_Non_Development()
+        public async Task RejectsHttpWhenEnvironmentIsProduction()
         {
-            // Arrange: simulate Production (TestServer is HTTP-only, so endpoint must reject)
-            var factory = _factory.WithWebHostBuilder(b => b.UseSetting("environment", "Production"));
-            var client = factory.CreateClient();
+            // Arrange: simulate Production environment
+            var prodFactory = _factory.WithWebHostBuilder(builder =>
+                builder.UseSetting("environment", "Production"));
+            var client = prodFactory.CreateClient();
 
-            var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
-            var nonce = Guid.NewGuid().ToString("N");
-            var body = "{\"id\":\"https-test\",\"amount\":10}";
-            var msg = $"{now}\n{nonce}\n{body}";
-            var secret = "dev_secret";
-            var sig = Convert.ToBase64String(
+            var now       = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
+            var nonce     = Guid.NewGuid().ToString("N");
+            var body      = "{\"id\":\"https-test\",\"amount\":10}";
+            var payload   = $"{now}\n{nonce}\n{body}";
+            var secret    = "dev_secret";
+            var signature = Convert.ToBase64String(
                 new System.Security.Cryptography.HMACSHA256(Encoding.UTF8.GetBytes(secret))
-                    .ComputeHash(Encoding.UTF8.GetBytes(msg)));
+                    .ComputeHash(Encoding.UTF8.GetBytes(payload))
+            );
 
-            var req = new HttpRequestMessage(HttpMethod.Post, "/webhook/swish");
-            req.Content = new StringContent(body, Encoding.UTF8, "application/json");
-            req.Headers.TryAddWithoutValidation("X-Swish-Timestamp", now);
-            req.Headers.TryAddWithoutValidation("X-Swish-Nonce", nonce);
-            req.Headers.TryAddWithoutValidation("X-Swish-Signature", sig);
+            var request = new HttpRequestMessage(HttpMethod.Post, "/webhook/swish")
+            {
+                Content = new StringContent(body, Encoding.UTF8, "application/json")
+            };
+            request.Headers.TryAddWithoutValidation("X-Swish-Timestamp", now);
+            request.Headers.TryAddWithoutValidation("X-Swish-Nonce", nonce);
+            request.Headers.TryAddWithoutValidation("X-Swish-Signature", signature);
 
             Environment.SetEnvironmentVariable("SWISH_WEBHOOK_SECRET", secret);
 
             // Act
-            var res = await client.SendAsync(req);
+            var response = await client.SendAsync(request);
 
-            // Assert: 400 because HTTPS is required outside Development
-            Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
+            // Assert
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
     }
 }
+

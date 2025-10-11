@@ -3,18 +3,21 @@ using Xunit;
 using NordAPI.Swish;
 using System.Net.Http;
 
-namespace NordAPI.Swish.Tests;
-
-public class BasicTests
+namespace NordAPI.Swish.Tests
 {
-    [Fact]
-    public void CanConstructClient()
+    // Unit tests for SwishClient basic instantiation
+    public class BasicTests
     {
-        // Arrange & Act
-        var client = new SwishClient(new HttpClient());
+        // Verify that SwishClient can be created with a default HttpClient
+        [Fact]
+        public void CanConstructClient()
+        {
+            // Arrange & Act
+            var client = new SwishClient(new HttpClient());
 
-        // Assert
-        Assert.NotNull(client);
+            // Assert
+            Assert.NotNull(client);
+        }
     }
 }
 
