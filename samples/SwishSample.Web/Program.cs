@@ -37,10 +37,11 @@ builder.Services.AddSwishClient(opts =>
 
 // -------------------------------------------------------------
 // Nonce store (replay protection):
-// Use Redis if REDIS_URL / SWISH_REDIS_CONN is set, otherwise InMemory (dev).
+// Use Redis if SWISH_REDIS (or alias) is set; otherwise InMemory (dev).
 // -------------------------------------------------------------
 var redisConn =
-    Environment.GetEnvironmentVariable("REDIS_URL")
+    Environment.GetEnvironmentVariable("SWISH_REDIS")
+    ?? Environment.GetEnvironmentVariable("REDIS_URL")
     ?? Environment.GetEnvironmentVariable("SWISH_REDIS_CONN");
 
 if (!string.IsNullOrWhiteSpace(redisConn))
@@ -57,6 +58,7 @@ else
 // -------------------------------------------------------------
 // Webhook verifier — requires SWISH_WEBHOOK_SECRET
 // -------------------------------------------------------------
+
 builder.Services.AddSingleton(sp =>
 {
     var cfg = sp.GetRequiredService<IConfiguration>();
