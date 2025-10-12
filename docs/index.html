@@ -2,38 +2,174 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>NordAPI – Secure .NET integrations in minutes</title>
+  <meta name="description" content="Swish & BankID SDK for .NET. mTLS, HMAC, anti-replay. Build secure payments and identity flows in minutes." />
   <link rel="stylesheet" href="style.css" />
-  <meta name="description" content="Secure .NET integrations in minutes – Swish & BankID SDK by NordAPI." />
 </head>
 <body>
-  <header class="hero">
-  <div class="container">
-    <img src="assets/nordapi-logo.png" alt="NordAPI logo" class="logo reveal glow" />
-    <h1 class="reveal">Secure .NET integrations in minutes</h1>
-    <p class="subtitle reveal">Swish &amp; BankID SDK by NordAPI</p>
-    <a href="https://github.com/NordAPI/NordAPI.SwishSdk" class="cta reveal glow" rel="noopener">Get started</a>
-  </div>
+  <!-- Simple top-nav for quick anchors -->
+  <nav class="topnav">
+    <div class="container nav-inner">
+      <a class="brand" href="#top" aria-label="NordAPI home">
+        <img src="assets/nordapi-logo.png" alt="NordAPI logo" class="brandmark" />
+        <span class="brandname">NordAPI</span>
+      </a>
+      <div class="nav-links">
+        <a href="#quickstart">Quickstart</a>
+        <a href="#features">Features</a>
+        <a href="https://github.com/NordAPI/NordAPI.SwishSdk" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO: keep your look, add dual-CTA -->
+  <header id="top" class="hero">
+    <div class="container hero-inner">
+      <img src="assets/nordapi-logo.png" alt="NordAPI logo" class="logo reveal glow" />
+      <h1 class="reveal">Secure .NET integrations in minutes</h1>
+      <p class="subtitle reveal">Swish &amp; BankID SDK by NordAPI • mTLS • HMAC • Anti-replay</p>
+      <div class="cta-row">
+        <a href="#quickstart" class="cta reveal glow" rel="noopener">Get started</a>
+        <a href="https://github.com/NordAPI/NordAPI.SwishSdk" class="cta-outline reveal" rel="noopener">View on GitHub</a>
+      </div>
+      <!-- Trust mini-badges -->
+      <div class="badges reveal" aria-label="tech badges">
+        <span>.NET 8+</span>
+        <span>MIT</span>
+        <span>SDK &amp; Webhooks</span>
+      </div>
+    </div>
   </header>
 
-  <main class="section features">
+  <!-- QUICKSTART: 5-minute flow with copy buttons -->
+  <section id="quickstart" class="section quickstart">
+    <div class="container">
+      <h2>Quickstart (5 minutes)</h2>
+      <div class="qs-grid">
+        <div class="card">
+          <h3>Install package</h3>
+          <div class="codeblock">
+            <button class="copy" data-copy='dotnet add package NordAPI.Swish'>Copy</button>
+<pre><code>dotnet add package NordAPI.Swish</code></pre>
+          </div>
+          <p class="help">NuGet package contains client, models and helpers for Swish.</p>
+        </div>
+
+        <div class="card">
+          <h3>Basic payment (sandbox)</h3>
+          <div class="codeblock">
+            <button class="copy" data-copy='var swish = new SwishClient(cfg =&gt; cfg.UseDevDefaults());
+await swish.PayAsync(new SwishPaymentRequest {
+    Amount = 100m, Currency = "SEK", PayerAlias = "46712345678",
+    Message = "Order #123"
+});'>Copy</button>
+<pre><code>var swish = new SwishClient(cfg =&gt; cfg.UseDevDefaults());
+await swish.PayAsync(new SwishPaymentRequest {
+    Amount = 100m, Currency = "SEK", PayerAlias = "46712345678",
+    Message = "Order #123"
+});</code></pre>
+          </div>
+          <p class="help">Configure certs + mTLS for prod. See checklist below.</p>
+        </div>
+
+        <div class="card">
+          <h3>Webhook (verified)</h3>
+          <div class="codeblock">
+            <button class="copy" data-copy='app.MapPost("/swish/webhook", async (HttpRequest req) =&gt; {
+    var evt = await SwishWebhook.ParseAsync(req);
+    if (!evt.IsValid) return Results.Unauthorized();
+    // handle payment success/failed here
+    return Results.Ok();
+});'>Copy</button>
+<pre><code>app.MapPost("/swish/webhook", async (HttpRequest req) =&gt; {
+    var evt = await SwishWebhook.ParseAsync(req);
+    if (!evt.IsValid) return Results.Unauthorized();
+    // handle payment success/failed here
+    return Results.Ok();
+});</code></pre>
+          </div>
+          <p class="help">HMAC validation and nonce-replay protection built-in.</p>
+        </div>
+      </div>
+
+      <div class="qs-cta">
+        <a class="cta" href="https://github.com/NordAPI/NordAPI.SwishSdk" rel="noopener">Open repository</a>
+        <a class="link" href="integration-checklist.md">Read the integration &amp; security checklist →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES GRID: crisp, scannable -->
+  <section id="features" class="section features">
     <div class="container">
       <h2>Why NordAPI?</h2>
-      <ul class="feature-list">
-        <li>✔️ End-to-end SDK for Swish &amp; BankID</li>
-        <li>🔒 Built-in security (mTLS, HMAC, nonce/replay)</li>
-        <li>⚡ Integrate in minutes with simple .NET code</li>
-      </ul>
+
+      <div class="feature-grid">
+        <article class="feature">
+          <div class="icon">🔒</div>
+          <h3>Security first</h3>
+          <p>mTLS, HMAC, nonce/replay protection and request signing out-of-the-box.</p>
+        </article>
+
+        <article class="feature">
+          <div class="icon">⚡</div>
+          <h3>Fast integration</h3>
+          <p>Production-ready client, minimal plumbing and sane defaults for .NET.</p>
+        </article>
+
+        <article class="feature">
+          <div class="icon">🧩</div>
+          <h3>Webhooks &amp; SDK</h3>
+          <p>End-to-end flow: create payments, receive callbacks, verify and persist.</p>
+        </article>
+
+        <article class="feature">
+          <div class="icon">📊</div>
+          <h3>Observability</h3>
+          <p>Structured logging and IDs that make troubleshooting straightforward.</p>
+        </article>
+      </div>
     </div>
-  </main>
+  </section>
+
+  <!-- DOC LINKS / CALLOUT -->
+  <section class="section docs">
+    <div class="container">
+      <div class="callout">
+        <h3>Going to production?</h3>
+        <p>Follow the checklist for timestamp strictness (±5 min), persistent nonces, HTTPS only, and secrets via KeyVault/env.</p>
+        <div class="callout-actions">
+          <a class="cta" href="integration-checklist.md">Open checklist</a>
+          <a class="cta-outline" href="https://github.com/NordAPI/NordAPI.SwishSdk#readme" rel="noopener">View README</a>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <footer class="footer">
-  <div class="container">
-    <p>© 2025 NordAPI. All rights reserved.</p>
-    <p><a href="mailto:info@nordapi.com" class="contact-link">info@nordapi.com</a></p>
-  </div>
+    <div class="container foot-inner">
+      <p>© 2025 NordAPI. All rights reserved.</p>
+      <p><a href="mailto:info@nordapi.com" class="contact-link">info@nordapi.com</a></p>
+    </div>
   </footer>
 
+  <!-- Tiny JS: copy-to-clipboard for code blocks -->
+  <script>
+    // Accessible copy buttons for code snippets
+    document.querySelectorAll('.copy').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(btn.dataset.copy);
+          btn.textContent = 'Copied!';
+          setTimeout(() => (btn.textContent = 'Copy'), 1200);
+        } catch {
+          btn.textContent = 'Copy failed';
+          setTimeout(() => (btn.textContent = 'Copy'), 1500);
+        }
+      });
+    });
+  </script>
 </body>
 </html>
+
