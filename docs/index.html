@@ -8,16 +8,24 @@
 
   <!-- SEO / Social -->
   <link rel="canonical" href="https://nordapi.net/" />
-  <link rel="icon" href="assets/nordapi-logo.png" type="image/png" />
+
+  <!-- Favicon / App icons (NEW) -->
+  <link rel="icon" href="assets/favicon.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="assets/favicon.png" sizes="180x180" />
+  <meta name="theme-color" content="#0c1222" />
+
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://nordapi.net/" />
   <meta property="og:title" content="NordAPI – Secure .NET integrations in minutes" />
   <meta property="og:description" content="Swish & BankID SDK for .NET with mTLS, HMAC and anti-replay. Go from zero to secure payments fast." />
-  <meta property="og:image" content="assets/nordapi-logo.png" />
+  <!-- UPDATED: point to OG image -->
+  <meta property="og:image" content="assets/og.png" />
+
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="NordAPI – Secure .NET integrations in minutes" />
   <meta name="twitter:description" content="Swish & BankID SDK for .NET with mTLS, HMAC and anti-replay." />
-  <meta name="twitter:image" content="assets/nordapi-logo.png" />
+  <!-- UPDATED: point to OG image -->
+  <meta name="twitter:image" content="assets/og.png" />
 
   <!-- Perf -->
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -57,28 +65,12 @@
         <a href="https://github.com/NordAPI/NordAPI.SwishSdk" class="cta-outline reveal" target="_blank" rel="noopener">View on GitHub</a>
       </div>
 
-      <!-- Trust badges -->
-      <!-- NOTE: Using local static badges until repo & package are public.
-           When ready, replace this block with shields.io images (kept below commented). -->
+      <!-- Local placeholder badges (until public) -->
       <div class="shields reveal local" aria-label="project badges">
         <span class="badge">GitHub: Private</span>
         <span class="badge">NuGet: Coming&nbsp;soon</span>
         <span class="badge">Downloads: 0</span>
       </div>
-
-      <!-- Public badges (uncomment when repo/package are public)
-      <div class="shields reveal" aria-label="project badges">
-        <a href="https://github.com/NordAPI/NordAPI.SwishSdk" target="_blank" rel="noopener" aria-label="GitHub stars">
-          <img src="https://img.shields.io/github/stars/NordAPI/NordAPI.SwishSdk?style=flat&logo=github" alt="GitHub stars badge" loading="lazy">
-        </a>
-        <a href="https://www.nuget.org/packages/NordAPI.Swish" target="_blank" rel="noopener" aria-label="NuGet version">
-          <img src="https://img.shields.io/nuget/vpre/NordAPI.Swish?label=NuGet" alt="NuGet version badge" loading="lazy">
-        </a>
-        <a href="https://www.nuget.org/packages/NordAPI.Swish" target="_blank" rel="noopener" aria-label="NuGet downloads">
-          <img src="https://img.shields.io/nuget/dt/NordAPI.Swish?label=downloads" alt="NuGet downloads badge" loading="lazy">
-        </a>
-      </div>
-      -->
 
       <!-- Tech mini-badges -->
       <div class="badges reveal" aria-label="tech badges">
@@ -236,8 +228,3 @@ await swish.PayAsync(new SwishPaymentRequest {
   </script>
 </body>
 </html>
-
-
-
-
-
