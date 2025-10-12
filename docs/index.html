@@ -6,33 +6,38 @@
   <title>NordAPI – Secure .NET integrations in minutes</title>
   <meta name="description" content="Swish & BankID SDK for .NET. mTLS, HMAC, anti-replay. Build secure payments and identity flows in minutes." />
 
-  <!-- SEO / Social -->
+  <!-- Canonical -->
   <link rel="canonical" href="https://nordapi.net/" />
 
-  <!-- Favicon / App icons (NEW) -->
+  <!-- Icons / theme -->
   <link rel="icon" href="assets/favicon.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="assets/favicon.png" sizes="180x180" />
   <meta name="theme-color" content="#0c1222" />
 
+  <!-- Open Graph / Twitter (absolute URLs, 1200×630) -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://nordapi.net/" />
   <meta property="og:title" content="NordAPI – Secure .NET integrations in minutes" />
   <meta property="og:description" content="Swish & BankID SDK for .NET with mTLS, HMAC and anti-replay. Go from zero to secure payments fast." />
-  <!-- UPDATED: point to OG image -->
-  <meta property="og:image" content="assets/og.png" />
+  <meta property="og:image" content="https://nordapi.net/assets/og.png" />
+  <meta property="og:image:secure_url" content="https://nordapi.net/assets/og.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="NordAPI logo and tagline" />
 
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="NordAPI – Secure .NET integrations in minutes" />
   <meta name="twitter:description" content="Swish & BankID SDK for .NET with mTLS, HMAC and anti-replay." />
-  <!-- UPDATED: point to OG image -->
-  <meta name="twitter:image" content="assets/og.png" />
+  <meta name="twitter:image" content="https://nordapi.net/assets/og.png" />
 
-  <!-- Perf -->
+  <!-- Fonts + styles -->
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
-  <!-- Simple top-nav for quick anchors -->
+  <!-- Top navigation -->
   <nav class="topnav" aria-label="Primary">
     <div class="container nav-inner">
       <a class="brand" href="#top" aria-label="NordAPI home">
@@ -65,14 +70,13 @@
         <a href="https://github.com/NordAPI/NordAPI.SwishSdk" class="cta-outline reveal" target="_blank" rel="noopener">View on GitHub</a>
       </div>
 
-      <!-- Local placeholder badges (until public) -->
+      <!-- Local badges (temporary until public) -->
       <div class="shields reveal local" aria-label="project badges">
         <span class="badge">GitHub: Private</span>
         <span class="badge">NuGet: Coming&nbsp;soon</span>
         <span class="badge">Downloads: 0</span>
       </div>
 
-      <!-- Tech mini-badges -->
       <div class="badges reveal" aria-label="tech badges">
         <span>.NET 8+</span>
         <span>MIT</span>
@@ -186,6 +190,7 @@ await swish.PayAsync(new SwishPaymentRequest {
     </div>
   </section>
 
+  <!-- FOOTER -->
   <footer class="footer">
     <div class="container foot-inner">
       <p>© 2025 NordAPI. All rights reserved.</p>
@@ -193,7 +198,7 @@ await swish.PayAsync(new SwishPaymentRequest {
     </div>
   </footer>
 
-  <!-- Tiny JS: copy-to-clipboard + mobile nav -->
+  <!-- JS: copy-to-clipboard + mobile nav -->
   <script>
     // Copy buttons
     document.querySelectorAll('.copy').forEach(btn => {
@@ -209,7 +214,7 @@ await swish.PayAsync(new SwishPaymentRequest {
       });
     });
 
-    // Mobile menu toggle & auto-close on link click
+    // Mobile menu toggle
     const toggle = document.querySelector('.menu-toggle');
     const nav = document.querySelector('.topnav');
     const navLinks = document.querySelectorAll('#nav-links a');
@@ -228,3 +233,4 @@ await swish.PayAsync(new SwishPaymentRequest {
   </script>
 </body>
 </html>
+
