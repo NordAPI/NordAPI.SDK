@@ -9,16 +9,22 @@
 </head>
 <body>
   <!-- Simple top-nav for quick anchors -->
-  <nav class="topnav">
+  <nav class="topnav" aria-label="Primary">
     <div class="container nav-inner">
       <a class="brand" href="#top" aria-label="NordAPI home">
-        <img src="assets/nordapi-logo.png" alt="NordAPI logo" class="brandmark" />
+        <img src="assets/nordapi-logo.png" alt="NordAPI logo" class="brandmark" loading="lazy" />
         <span class="brandname">NordAPI</span>
       </a>
-      <div class="nav-links">
+
+      <!-- Mobile menu toggle (hidden on desktop) -->
+      <button class="menu-toggle" aria-expanded="false" aria-controls="nav-links" aria-label="Toggle navigation">
+        <span class="menu-bars" aria-hidden="true"></span>
+      </button>
+
+      <div class="nav-links" id="nav-links">
         <a href="#quickstart">Quickstart</a>
         <a href="#features">Features</a>
-        <a href="https://github.com/NordAPI/NordAPI.SwishSdk" rel="noopener">GitHub</a>
+        <a href="https://github.com/NordAPI/NordAPI.SwishSdk" target="_blank" rel="noopener">GitHub</a>
       </div>
     </div>
   </nav>
@@ -26,12 +32,12 @@
   <!-- HERO: keep your look, add dual-CTA -->
   <header id="top" class="hero">
     <div class="container hero-inner">
-      <img src="assets/nordapi-logo.png" alt="NordAPI logo" class="logo reveal glow" />
+      <img src="assets/nordapi-logo.png" alt="NordAPI logo" class="logo reveal glow" loading="lazy" />
       <h1 class="reveal">Secure .NET integrations in minutes</h1>
       <p class="subtitle reveal">Swish &amp; BankID SDK by NordAPI • mTLS • HMAC • Anti-replay</p>
       <div class="cta-row">
         <a href="#quickstart" class="cta reveal glow" rel="noopener">Get started</a>
-        <a href="https://github.com/NordAPI/NordAPI.SwishSdk" class="cta-outline reveal" rel="noopener">View on GitHub</a>
+        <a href="https://github.com/NordAPI/NordAPI.SwishSdk" class="cta-outline reveal" target="_blank" rel="noopener">View on GitHub</a>
       </div>
       <!-- Trust mini-badges -->
       <div class="badges reveal" aria-label="tech badges">
@@ -94,7 +100,7 @@ await swish.PayAsync(new SwishPaymentRequest {
       </div>
 
       <div class="qs-cta">
-        <a class="cta" href="https://github.com/NordAPI/NordAPI.SwishSdk" rel="noopener">Open repository</a>
+        <a class="cta" href="https://github.com/NordAPI/NordAPI.SwishSdk" target="_blank" rel="noopener">Open repository</a>
         <a class="link" href="integration-checklist.md">Read the integration &amp; security checklist →</a>
       </div>
     </div>
@@ -141,7 +147,7 @@ await swish.PayAsync(new SwishPaymentRequest {
         <p>Follow the checklist for timestamp strictness (±5 min), persistent nonces, HTTPS only, and secrets via KeyVault/env.</p>
         <div class="callout-actions">
           <a class="cta" href="integration-checklist.md">Open checklist</a>
-          <a class="cta-outline" href="https://github.com/NordAPI/NordAPI.SwishSdk#readme" rel="noopener">View README</a>
+          <a class="cta-outline" href="https://github.com/NordAPI/NordAPI.SwishSdk#readme" target="_blank" rel="noopener">View README</a>
         </div>
       </div>
     </div>
@@ -154,7 +160,7 @@ await swish.PayAsync(new SwishPaymentRequest {
     </div>
   </footer>
 
-  <!-- Tiny JS: copy-to-clipboard for code blocks -->
+  <!-- Tiny JS: copy-to-clipboard for code blocks + mobile nav -->
   <script>
     // Accessible copy buttons for code snippets
     document.querySelectorAll('.copy').forEach(btn => {
@@ -169,7 +175,17 @@ await swish.PayAsync(new SwishPaymentRequest {
         }
       });
     });
+
+    // Mobile menu toggle
+    const toggle = document.querySelector('.menu-toggle');
+    const links = document.getElementById('nav-links');
+    const nav = document.querySelector('.topnav');
+    toggle?.addEventListener('click', () => {
+      const open = nav.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', String(open));
+    });
   </script>
 </body>
 </html>
+
 

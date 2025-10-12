@@ -1,5 +1,4 @@
 /* ---------- Base / tokens ---------- */
-/* Clean, minimal system with your existing palette, extended a bit */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
 :root{
@@ -16,6 +15,8 @@
   --text:#e6ecff;
   --muted:#a8b2d1;
   --muted-2:#8d98b8;
+
+  --radius:14px;
 }
 
 *{ box-sizing:border-box }
@@ -30,7 +31,11 @@ body{
     linear-gradient(180deg, var(--bg-top), var(--bg-deep));
 }
 
-.container{ width:min(1120px, 92%); margin:0 auto }
+/* Container keeps things fluid without fixed widths */
+.container{ width:min(1120px, 92%); margin:0 auto; padding-inline: 0 }
+
+/* Focus outline for keyboard users */
+:focus-visible{ outline: 2px solid var(--blue-2); outline-offset: 2px }
 
 /* ---------- Top nav ---------- */
 .topnav{
@@ -39,14 +44,48 @@ body{
   background: rgba(8,12,22,.45);
   border-bottom:1px solid var(--line);
 }
-.nav-inner{ display:flex; align-items:center; justify-content:space-between; height:58px }
+.nav-inner{
+  display:flex; align-items:center; justify-content:space-between; min-height:58px; gap:10px;
+}
 .brand{ display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--text) }
 .brandmark{ width:28px; height:28px; filter: drop-shadow(0 2px 8px rgba(0,0,0,.3)) }
 .brandname{ font-weight:700; letter-spacing:.2px }
+
+.nav-links{ display:flex; align-items:center; gap:18px; }
 .nav-links a{
-  color:var(--muted); text-decoration:none; margin-left:18px; font-weight:600;
+  color:var(--muted); text-decoration:none; font-weight:600;
 }
 .nav-links a:hover{ color:#dfe7ff }
+
+/* Mobile menu button */
+.menu-toggle{
+  display:none; position:relative;
+  width:40px; height:36px; border-radius:10px;
+  border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.06);
+  cursor:pointer;
+}
+.menu-toggle:hover{ background:rgba(255,255,255,.12) }
+.menu-bars, .menu-bars::before, .menu-bars::after{
+  content:""; position:absolute; left:9px; right:9px; height:2px; background:#dfe7ff; border-radius:2px;
+}
+.menu-bars{ top:17px }
+.menu-bars::before{ top:-8px }
+.menu-bars::after{ top:8px }
+
+/* Collapse nav on small screens */
+@media (max-width: 768px){
+  .menu-toggle{ display:block }
+  .nav-links{
+    display:none; position:absolute; right:0; top:100%;
+    background: rgba(8,12,22,.95);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:10px; margin-top:8px;
+    flex-direction:column; align-items:flex-start; gap:8px;
+    min-width: 220px;
+  }
+  .topnav.open .nav-links{ display:flex }
+}
 
 /* ---------- Hero ---------- */
 .hero{
@@ -107,19 +146,20 @@ h1{
   display:grid; grid-template-columns: repeat(3, minmax(0,1fr));
   gap:18px; margin-top:16px;
 }
-@media (max-width: 960px){ .qs-grid{ grid-template-columns:1fr } }
+@media (max-width: 1024px){ .qs-grid{ grid-template-columns: repeat(2, minmax(0,1fr)) } }
+@media (max-width: 720px){ .qs-grid{ grid-template-columns:1fr } }
 
 .card{
   background: rgba(255,255,255,.04);
   border:1px solid var(--line);
-  border-radius:14px; padding:18px 16px;
+  border-radius:var(--radius); padding:18px 16px;
 }
 .card h3{ margin:4px 0 10px; font-size:16px }
 .help{ color:var(--muted-2); margin:10px 0 0; font-size:14px }
 
 .codeblock{
   position:relative; background:#0c1426; border:1px solid rgba(255,255,255,.07);
-  border-radius:10px; overflow:auto; padding:12px 12px 12px 12px;
+  border-radius:10px; overflow:auto; padding:12px;
 }
 .codeblock pre{ margin:0; font-size:13px; line-height:1.45; color:#dfe7ff; }
 .copy{
@@ -144,7 +184,7 @@ h1{
 .feature{
   background: rgba(255,255,255,.04);
   border:1px solid var(--line);
-  border-radius:14px; padding:18px 16px; text-align:left;
+  border-radius:var(--radius); padding:18px 16px; text-align:left;
 }
 .feature .icon{ font-size:22px; margin-bottom:8px }
 .feature h3{ margin:0 0 6px; font-size:16px }
@@ -155,7 +195,7 @@ h1{
 .callout{
   border:1px dashed rgba(255,255,255,.15);
   background: rgba(255,255,255,.03);
-  border-radius:14px; padding:18px 18px;
+  border-radius:var(--radius); padding:18px 18px;
 }
 .callout h3{ margin:0 0 6px }
 .callout p{ color:#cfe0ff; margin:0 0 12px }
@@ -170,7 +210,7 @@ h1{
 .contact-link{ color:#4da3ff; text-decoration:none }
 .contact-link:hover{ color:#77c4ff; text-decoration:underline }
 
-/* ---------- Animations (kept from your original) ---------- */
+/* ---------- Animations ---------- */
 @keyframes fadeUp { from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:translateY(0)} }
 @keyframes softGlow {
   0%{ box-shadow:0 8px 24px rgba(0,150,255,.22), 0 0 0 rgba(0,150,255,0) }
@@ -182,4 +222,10 @@ h1{
 .subtitle{ animation: fadeUp .6s ease .25s forwards }
 .cta.reveal{ animation: fadeUp .6s ease .35s forwards }
 .glow{ animation: fadeUp .6s ease .35s forwards, softGlow 3s 1s ease-in-out infinite }
+
+/* Reduce motion for those who prefer it */
+@media (prefers-reduced-motion: reduce){
+  .reveal, .glow{ animation: none !important; opacity: 1 }
+}
+
 
