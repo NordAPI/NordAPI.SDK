@@ -2,31 +2,31 @@
 <html lang="en">
 <head>
   <!-- Basics -->
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <title>NordAPI – Secure .NET integrations in minutes</title>
-  <meta name="description" content="NordAPI helps .NET teams integrate BankID and Swish in minutes with secure, production-grade SDKs." />
-  <link rel="canonical" href="https://nordapi.net/" />
+  <meta name="description" content="NordAPI helps .NET teams integrate BankID and Swish in minutes with secure, production-grade SDKs.">
+  <link rel="canonical" href="https://nordapi.net/">
 
   <!-- Open Graph -->
-  <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="NordAPI" />
-  <meta property="og:title" content="NordAPI – Secure .NET integrations in minutes" />
-  <meta property="og:description" content="BankID + Swish SDKs for .NET. Secure, production-ready, and fast to integrate." />
-  <meta property="og:url" content="https://nordapi.net/" />
-  <meta property="og:image" content="https://nordapi.net/assets/og.png" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="NordAPI logo and tagline" />
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="NordAPI">
+  <meta property="og:title" content="NordAPI – Secure .NET integrations in minutes">
+  <meta property="og:description" content="BankID + Swish SDKs for .NET. Secure, production-ready, and fast to integrate.">
+  <meta property="og:url" content="https://nordapi.net/">
+  <meta property="og:image" content="https://nordapi.net/assets/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="NordAPI logo and tagline">
 
   <!-- Twitter -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="NordAPI – Secure .NET integrations in minutes" />
-  <meta name="twitter:description" content="BankID + Swish SDKs for .NET. Secure, production-ready, and fast to integrate." />
-  <meta name="twitter:image" content="https://nordapi.net/assets/og.png" />
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="NordAPI – Secure .NET integrations in minutes">
+  <meta name="twitter:description" content="BankID + Swish SDKs for .NET. Secure, production-ready, and fast to integrate.">
+  <meta name="twitter:image" content="https://nordapi.net/assets/og.png">
 
-  <!-- Security / privacy (CSP relaxed for Google Fonts, scripts only from self) -->
+  <!-- Security / privacy -->
   <meta http-equiv="Content-Security-Policy"
         content="default-src 'self';
                  img-src 'self' data:;
@@ -34,8 +34,8 @@
                  font-src 'self' data: https://fonts.gstatic.com;
                  script-src 'self';
                  connect-src 'self'">
-  <meta name="referrer" content="no-referrer-when-downgrade" />
-  <meta name="theme-color" content="#0a58ff" />
+  <meta name="referrer" content="no-referrer-when-downgrade">
+  <meta name="theme-color" content="#0a58ff">
 
   <!-- Icons & PWA manifest -->
   <link rel="icon" href="/favicon.ico" sizes="any">
@@ -43,12 +43,13 @@
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
   <link rel="manifest" href="/manifest.json">
 
-  <!-- Preload hero/OG image to improve LCP -->
-  <link rel="preload" as="image" href="/assets/og.png" imagesrcset="/assets/og.png 1x" />
+  <!-- Preload hero image -->
+  <link rel="preload" as="image" href="/assets/nordapi-logo.png">
 
   <!-- Fonts + styles -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
 
   <!-- Structured Data -->
   <script type="application/ld+json">
@@ -58,7 +59,7 @@
     "name": "NordAPI",
     "url": "https://nordapi.net/",
     "logo": "https://nordapi.net/icons/icon-512.png",
-    "sameAs": []
+    "description": "Secure .NET SDKs for BankID and Swish integrations"
   }
   </script>
   <script type="application/ld+json">
@@ -66,34 +67,29 @@
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": "NordAPI",
-    "url": "https://nordapi.net/",
-    "potentialAction": {
-      "@type": "SearchAction",
-      "target": "https://nordapi.net/?q={search_term_string}",
-      "query-input": "required name=search_term_string"
-    }
+    "url": "https://nordapi.net/"
   }
   </script>
 </head>
 
 <body>
   <!-- Top navigation -->
-  <nav class="topnav" aria-label="Primary">
+  <nav class="topnav" aria-label="Primary navigation">
     <div class="container nav-inner">
       <a class="brand" href="#top" aria-label="NordAPI home">
-        <img src="assets/nordapi-logo.png" alt="NordAPI logo" class="brandmark" loading="lazy" width="128" height="128" style="height:auto" />
+        <img src="assets/nordapi-logo.png" alt="" class="brandmark" width="28" height="28">
         <span class="brandname">NordAPI</span>
       </a>
 
       <!-- Mobile menu toggle -->
-      <button class="menu-toggle" aria-expanded="false" aria-controls="nav-links" aria-label="Toggle navigation">
+      <button class="menu-toggle" aria-expanded="false" aria-controls="nav-links" aria-label="Toggle navigation menu">
         <span class="menu-bars" aria-hidden="true"></span>
       </button>
 
       <div class="nav-links" id="nav-links">
         <a href="#quickstart">Quickstart</a>
         <a href="#features">Features</a>
-        <a href="https://github.com/NordAPI/NordAPI.SwishSdk" target="_blank" rel="noopener noreferrer" aria-label="Open NordAPI on GitHub">GitHub</a>
+        <a href="https://github.com/NordAPI/NordAPI.SwishSdk" target="_blank" rel="noopener noreferrer">GitHub</a>
       </div>
     </div>
   </nav>
@@ -101,23 +97,23 @@
   <!-- HERO -->
   <header id="top" class="hero">
     <div class="container hero-inner">
-      <img src="assets/nordapi-logo.png" alt="NordAPI logo" class="logo reveal glow" loading="eager" width="256" height="256" style="height:auto" />
+      <img src="assets/nordapi-logo.png" alt="NordAPI" class="logo reveal glow" width="320" height="320">
       <h1 class="reveal">Secure .NET integrations in minutes</h1>
       <p class="subtitle reveal">Swish &amp; BankID SDK by NordAPI • mTLS • HMAC • Anti-replay</p>
 
       <div class="cta-row" role="group" aria-label="Primary actions">
-        <a href="#quickstart" class="cta reveal glow" rel="noopener" aria-label="Jump to Quickstart">Get started</a>
-        <a href="https://github.com/NordAPI/NordAPI.SwishSdk" class="cta-outline reveal" target="_blank" rel="noopener noreferrer" aria-label="View repository on GitHub">View on GitHub</a>
+        <a href="#quickstart" class="cta reveal glow">Get started</a>
+        <a href="https://github.com/NordAPI/NordAPI.SwishSdk" class="cta-outline reveal" target="_blank" rel="noopener noreferrer">View on GitHub</a>
       </div>
 
-      <!-- Local badges (temporary until public) -->
-      <div class="shields reveal local" aria-label="project badges">
-        <span class="badge" aria-label="GitHub private flag">GitHub: Private</span>
-        <span class="badge" aria-label="NuGet coming soon">NuGet: Coming&nbsp;soon</span>
-        <span class="badge" aria-label="Downloads zero">Downloads: 0</span>
+      <!-- Local badges -->
+      <div class="shields reveal local" aria-label="Project status badges">
+        <span class="badge">GitHub: Private</span>
+        <span class="badge">NuGet: Coming&nbsp;soon</span>
+        <span class="badge">Downloads: 0</span>
       </div>
 
-      <div class="badges reveal" aria-label="technology tags">
+      <div class="badges reveal" aria-label="Technology stack">
         <span>.NET 8+</span>
         <span>MIT</span>
         <span>SDK &amp; Webhooks</span>
@@ -130,42 +126,42 @@
     <div class="container">
       <h2 id="qsh2">Quickstart (5 minutes)</h2>
       <div class="qs-grid">
-        <div class="card">
+        <article class="card">
           <h3>Install package</h3>
           <div class="codeblock">
-            <button class="copy" aria-label="Copy install command" data-copy='dotnet add package NordAPI.Swish'>Copy</button>
-<pre><code>dotnet add package NordAPI.Swish</code></pre>
+            <button class="copy" aria-label="Copy install command" data-copy="dotnet add package NordAPI.Swish">Copy</button>
+            <pre><code>dotnet add package NordAPI.Swish</code></pre>
           </div>
           <p class="help">NuGet package contains client, models and helpers for Swish.</p>
-        </div>
+        </article>
 
-        <div class="card">
+        <article class="card">
           <h3>Basic payment (sandbox)</h3>
           <div class="codeblock">
-            <button class="copy" aria-label="Copy basic payment example" data-copy='var swish = new SwishClient(cfg =&gt; cfg.UseDevDefaults());
+            <button class="copy" aria-label="Copy basic payment example" data-copy="var swish = new SwishClient(cfg => cfg.UseDevDefaults());
 await swish.PayAsync(new SwishPaymentRequest {
-    Amount = 100m, Currency = "SEK", PayerAlias = "46712345678",
-    Message = "Order #123"
-});'>Copy</button>
-<pre><code>var swish = new SwishClient(cfg =&gt; cfg.UseDevDefaults());
+    Amount = 100m, Currency = &quot;SEK&quot;, PayerAlias = &quot;46712345678&quot;,
+    Message = &quot;Order #123&quot;
+});">Copy</button>
+            <pre><code>var swish = new SwishClient(cfg => cfg.UseDevDefaults());
 await swish.PayAsync(new SwishPaymentRequest {
     Amount = 100m, Currency = "SEK", PayerAlias = "46712345678",
     Message = "Order #123"
 });</code></pre>
           </div>
           <p class="help">Configure certs + mTLS for prod. See checklist below.</p>
-        </div>
+        </article>
 
-        <div class="card">
+        <article class="card">
           <h3>Webhook (verified)</h3>
           <div class="codeblock">
-            <button class="copy" aria-label="Copy webhook example" data-copy='app.MapPost("/swish/webhook", async (HttpRequest req) =&gt; {
+            <button class="copy" aria-label="Copy webhook example" data-copy="app.MapPost(&quot;/swish/webhook&quot;, async (HttpRequest req) => {
     var evt = await SwishWebhook.ParseAsync(req);
     if (!evt.IsValid) return Results.Unauthorized();
     // handle payment success/failed here
     return Results.Ok();
-});'>Copy</button>
-<pre><code>app.MapPost("/swish/webhook", async (HttpRequest req) =&gt; {
+});">Copy</button>
+            <pre><code>app.MapPost("/swish/webhook", async (HttpRequest req) => {
     var evt = await SwishWebhook.ParseAsync(req);
     if (!evt.IsValid) return Results.Unauthorized();
     // handle payment success/failed here
@@ -173,10 +169,10 @@ await swish.PayAsync(new SwishPaymentRequest {
 });</code></pre>
           </div>
           <p class="help">HMAC validation and nonce-replay protection built-in.</p>
-        </div>
+        </article>
       </div>
 
-      <div class="qs-cta" role="group" aria-label="Repository and checklist">
+      <div class="qs-cta" role="group" aria-label="Additional resources">
         <a class="cta" href="https://github.com/NordAPI/NordAPI.SwishSdk" target="_blank" rel="noopener noreferrer">Open repository</a>
         <a class="link" href="integration-checklist.md">Read the integration &amp; security checklist →</a>
       </div>
@@ -216,7 +212,7 @@ await swish.PayAsync(new SwishPaymentRequest {
     </div>
   </section>
 
-  <!-- DOC LINKS / CALLOUT -->
+  <!-- DOC LINKS -->
   <section class="section docs" aria-labelledby="doc-h2">
     <div class="container">
       <div class="callout">
@@ -234,11 +230,10 @@ await swish.PayAsync(new SwishPaymentRequest {
   <footer class="footer">
     <div class="container foot-inner">
       <p>© 2025 NordAPI. All rights reserved.</p>
-      <p><a href="mailto:info@nordapi.com" class="contact-link" aria-label="Contact NordAPI by email">info@nordapi.com</a></p>
+      <p><a href="mailto:info@nordapi.com" class="contact-link">info@nordapi.com</a></p>
     </div>
   </footer>
 
-  <!-- JS moved to external file to satisfy CSP -->
   <script src="app.js"></script>
 </body>
 </html>
