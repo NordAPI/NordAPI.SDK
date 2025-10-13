@@ -11,6 +11,7 @@
   --blue-1:#3fa9f5;
   --blue-2:#4fc3f7;
   --blue-3:#1da1ff;
+  --accent:#5cc6ff;
 
   --text:#e6ecff;
   --muted:#a8b2d1;
@@ -21,8 +22,9 @@
   --elev-strong: 0 14px 36px rgba(0,150,255,.30);
 }
 
-*{ box-sizing:border-box }
+*{ box-sizing:border-box; min-width:0 }
 html,body{ height:100%; margin:0 }
+img{ max-width:100%; height:auto; display:block } /* mobile-safe images */
 body{
   display:flex; flex-direction:column;
   font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
@@ -78,13 +80,14 @@ body{
 @media (max-width: 768px){
   .menu-toggle{ display:block }
   .nav-links{
-    display:none; position:absolute; right:0; top:100%;
-    background: rgba(8,12,22,.95);
+    display:none; position:absolute; right:4%; top:100%;
+    background: rgba(8,12,22,.97);
     border:1px solid var(--line);
     border-radius:12px;
     padding:10px; margin-top:8px;
     flex-direction:column; align-items:flex-start; gap:8px;
-    min-width: 220px;
+    min-width: clamp(220px, 60vw, 320px);
+    box-shadow: 0 12px 28px rgba(0,0,0,.35);
   }
   .topnav.open .nav-links{ display:flex }
 }
@@ -94,9 +97,9 @@ body{
   min-height:72vh; display:flex; align-items:center; text-align:center;
   padding:72px 0 48px;
 }
-.hero-inner{ display:flex; flex-direction:column; align-items:center }
+.hero-inner{ display:flex; flex-direction:column; align-items:center; margin: 0 auto; }
 .logo{
-  width:min(360px, 60vw); height:auto; margin:0 auto 16px; display:block;
+  width:min(320px, 55vw); height:auto; margin:0 auto 16px; display:block;
   filter: drop-shadow(0 8px 24px rgba(0,0,0,.35));
 }
 
@@ -124,12 +127,16 @@ h1{
 }
 .cta-outline:hover{ border-color: rgba(255,255,255,.35); transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0,0,0,.25) }
 
-.badges, .shields{ margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; justify-content:center }
+/* Badges / shields */
+.badges, .shields{
+  margin-top:14px;
+  margin-bottom:14px; /* extra breathing room before Quickstart */
+  display:flex; gap:10px; flex-wrap:wrap; justify-content:center
+}
 .badges span{
   font-size:12px; color:#bcd1ff; background:rgba(255,255,255,.06);
   border:1px solid var(--line); padding:6px 10px; border-radius:8px;
 }
-/* Local static badges (until public) */
 .shields.local .badge{
   font-size:12px; color:#cfe0ff; background:rgba(255,255,255,.07);
   border:1px solid var(--line); padding:6px 10px; border-radius:8px;
@@ -138,15 +145,20 @@ h1{
 
 /* ---------- Sections ---------- */
 .section{
+  position:relative;
   padding: 52px 0 56px;
   background: var(--panel);
   border-top: 1px solid var(--line);
   border-bottom: 1px solid rgba(0,0,0,.5);
 }
 .section h2{
-  margin:0 0 18px; text-align:center; font-size: clamp(22px, 2.4vw, 28px);
+  margin:24px 0 18px; /* ensure clear separation on mobile */
+  text-align:center; font-size: clamp(22px, 2.4vw, 28px);
   color: var(--blue-1);
 }
+
+/* Small vertical spacer directly under hero to avoid any overlap */
+.hero + .section{ margin-top: 8px; }
 
 /* ---------- Quickstart ---------- */
 .quickstart{ background: var(--panel-strong) }
@@ -155,7 +167,7 @@ h1{
   gap:18px; margin-top:16px;
 }
 @media (max-width: 1024px){ .qs-grid{ grid-template-columns: repeat(2, minmax(0,1fr)) } }
-@media (max-width: 720px){ .qs-grid{ grid-template-columns:1fr } }
+@media (max-width: 720px){ .qs-grid{ grid-template-columns:1fr } } /* one per row on mobile */
 
 .card{
   background: rgba(255,255,255,.04);
@@ -171,7 +183,7 @@ h1{
   position:relative; background:#0c1426; border:1px solid rgba(255,255,255,.07);
   border-radius:10px; overflow:auto; padding:12px;
 }
-.codeblock pre{ margin:0; font-size:13px; line-height:1.45; color:#dfe7ff; }
+.codeblock pre{ margin:0; font-size:13px; line-height:1.45; color:#dfe7ff; white-space:pre; }
 .copy{
   position:absolute; top:8px; right:8px; font-size:12px; padding:6px 9px; cursor:pointer;
   border-radius:8px; border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.06);
@@ -239,6 +251,43 @@ h1{
 @media (prefers-reduced-motion: reduce){
   .reveal, .glow{ animation: none !important; opacity: 1 }
 }
+
+/* ---------- Mobile-first polish ---------- */
+@media (max-width: 540px){
+  .container{ width:94% }
+  .hero{ padding:56px 0 40px; min-height: 64vh }
+  .logo{ width: 140px; margin-bottom: 10px }
+  h1{ font-size: clamp(24px, 8vw, 34px); }
+  .subtitle{ font-size: 15px }
+
+  /* CTA full width on phones */
+  .cta, .cta-outline{ width:100%; text-align:center; border-radius:12px }
+
+  /* Wider/correct dropdown */
+  .nav-links{
+    right: 3%;
+    min-width: 92vw;
+    max-width: 92vw;
+  }
+
+  /* Code block readability */
+  .codeblock pre{
+    font-size: 12px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  .card{ padding:16px 14px }
+}
+
+/* Extra small screens */
+@media (max-width: 380px){
+  .logo{ width: 120px }
+  h1{ font-size: 22px }
+  .subtitle{ font-size: 14px }
+}
+
+
 
 
 

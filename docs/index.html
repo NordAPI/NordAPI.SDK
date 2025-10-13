@@ -26,8 +26,14 @@
   <meta name="twitter:description" content="BankID + Swish SDKs for .NET. Secure, production-ready, and fast to integrate." />
   <meta name="twitter:image" content="https://nordapi.net/assets/og.png" />
 
-  <!-- Security / privacy (meta fallback; real headers added later via CDN/server) -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; script-src 'self'; connect-src 'self'">
+  <!-- Security / privacy (CSP relaxed for Google Fonts, scripts only from self) -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self';
+                 img-src 'self' data:;
+                 style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+                 font-src 'self' data: https://fonts.gstatic.com;
+                 script-src 'self';
+                 connect-src 'self'">
   <meta name="referrer" content="no-referrer-when-downgrade" />
   <meta name="theme-color" content="#0a58ff" />
 
@@ -37,7 +43,7 @@
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
   <link rel="manifest" href="/manifest.json">
 
-  <!-- Preload hero/OG image to improve LCP (adjust path if needed) -->
+  <!-- Preload hero/OG image to improve LCP -->
   <link rel="preload" as="image" href="/assets/og.png" imagesrcset="/assets/og.png 1x" />
 
   <!-- Fonts + styles -->
@@ -232,38 +238,7 @@ await swish.PayAsync(new SwishPaymentRequest {
     </div>
   </footer>
 
-  <!-- JS: copy-to-clipboard + mobile nav -->
-  <script>
-    // Copy buttons
-    document.querySelectorAll('.copy').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        try {
-          await navigator.clipboard.writeText(btn.dataset.copy);
-          btn.textContent = 'Copied!';
-          setTimeout(() => (btn.textContent = 'Copy'), 1200);
-        } catch {
-          btn.textContent = 'Copy failed';
-          setTimeout(() => (btn.textContent = 'Copy'), 1500);
-        }
-      });
-    });
-
-    // Mobile menu toggle
-    const toggle = document.querySelector('.menu-toggle');
-    const nav = document.querySelector('.topnav');
-    const navLinks = document.querySelectorAll('#nav-links a');
-
-    toggle?.addEventListener('click', () => {
-      const open = nav.classList.toggle('open');
-      toggle.setAttribute('aria-expanded', String(open));
-    });
-
-    navLinks.forEach(a => a.addEventListener('click', () => {
-      if (nav.classList.contains('open')) {
-        nav.classList.remove('open');
-        toggle.setAttribute('aria-expanded', 'false');
-      }
-    }));
-  </script>
+  <!-- JS moved to external file to satisfy CSP -->
+  <script src="app.js"></script>
 </body>
 </html>
