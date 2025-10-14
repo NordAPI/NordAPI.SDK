@@ -1,16 +1,28 @@
 name: CI Build
+
 on:
   pull_request:
   push:
     branches: [ main ]
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      SWISH_WEBHOOK_SECRET: dev_secret
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-      - run: dotnet restore
-      - run: dotnet build --no-restore
-      - run: dotnet test --no-build --verbosity normal
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore
+
+      - name: Test
+        run: dotnet test --no-build --verbosity normal
