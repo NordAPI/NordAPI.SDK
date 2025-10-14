@@ -1,10 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>SwishSample.Web</AssemblyName>
+    <UserSecretsId>93084709-58fd-43f3-bc00-dd3e13095929</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
