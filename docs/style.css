@@ -6,9 +6,16 @@
 
   --bg-top: #0c1222;
   --bg-deep: #05070d;
+
+  /* Prior transparent tokens (kept for other uses) */
   --panel: rgba(8, 12, 22, .56);
   --panel-strong: rgba(6, 10, 20, .75);
-  --line: rgba(255, 255, 255, .06);
+
+  /* NEW: opaque (solid) variants to stop gradient bleed-through */
+  --panel-opaque: #0a111f;        /* section background */
+  --panel-strong-opaque: #0a0f1c; /* quickstart section */
+
+  --line: rgba(255,255,255,.06);
 
   --blue-1: #3fa9f5;
   --blue-2: #4fc3f7;
@@ -23,7 +30,7 @@
   --elev: 0 8px 24px rgba(0, 150, 255, .25);
   --elev-strong: 0 14px 36px rgba(0, 150, 255, .30);
 
-  /* Navigation height used to avoid sticky overlap in hero */
+  /* Navigation height to avoid sticky overlap in hero */
   --nav-h: 58px;
 }
 
@@ -54,7 +61,7 @@ body{
   top:0;
   z-index:10;
   backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px); /* iOS/Safari */
+  -webkit-backdrop-filter: blur(6px);
   background: rgba(8,12,22,.45);
   border-bottom:1px solid var(--line);
   padding-top: env(safe-area-inset-top, 0);
@@ -106,54 +113,41 @@ body{
 }
 
 /* ---------- Hero (svh/dvh + percent-based spacing) ---------- */
-.hero {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start; /* start higher to avoid sticky overlap */
-  justify-content: center;
-  text-align: center;
+.hero{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start; /* start higher to avoid sticky overlap */
+  justify-content:center;
+  text-align:center;
 
-  /* Stable height on Android/iOS: fallback order vh → svh → dvh */
-  min-height: 70vh;
-  min-height: 70svh;
-  min-height: 70dvh;
+  /* Stable height on Android/iOS (fallback order) */
+  min-height:70vh;
+  min-height:70svh;
+  min-height:70dvh;
 
   /* Spacing in viewport height */
-  padding: 10vh 0 6vh;
+  padding:10vh 0 6vh;
 
-  /* Compensate for sticky nav height */
+  /* Compensate for sticky nav */
   padding-top: calc(10vh + var(--nav-h) + env(safe-area-inset-top, 0));
 }
-
-/* Hero inner with percent-based spacing */
-.hero-inner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3vh; /* scales with height */
-  margin: 0 auto;
-  width: 100%;
-  max-width: 900px;
+.hero-inner{
+  display:flex; flex-direction:column; align-items:center;
+  gap:3vh; margin:0 auto; width:100%; max-width:900px;
 }
-
-/* Logo: percentage responsiveness + Firefox baseline gap guard */
-.logo {
-  width: 45%;
-  max-width: 300px;
-  height: auto;
-  display: block;
-  vertical-align: middle;
+.logo{
+  width:45%; max-width:300px; height:auto; display:block; vertical-align:middle;
   filter: drop-shadow(0 8px 24px rgba(0,0,0,.35));
-  image-rendering: auto;
+  image-rendering:auto;
 }
 
 /* Headline with gradient text (desktop/tablet) */
 h1{
   font-size: clamp(28px, 3.6vw, 44px);
-  line-height:1.15; margin: 0;
+  line-height:1.15; margin:0;
   background: linear-gradient(90deg, var(--blue-1), var(--blue-2));
-  background-clip: text; -webkit-background-clip: text;
-  color: transparent; -webkit-text-fill-color: transparent;
+  background-clip:text; -webkit-background-clip:text;
+  color:transparent; -webkit-text-fill-color:transparent;
 }
 .subtitle{ color:var(--muted); margin:0; font-size: clamp(15px,1.6vw,18px) }
 
@@ -165,39 +159,40 @@ h1{
   box-shadow: var(--elev);
 }
 .cta:hover{ transform: translateY(-2px); filter:brightness(1.05); box-shadow: var(--elev-strong) }
-
 .cta-outline{
   display:inline-block; padding:13px 21px; font-weight:700; text-decoration:none;
-  color:#d9e7ff; border:1px solid rgba(255,255,255,.18); border-radius:10px; background: transparent;
+  color:#d9e7ff; border:1px solid rgba(255,255,255,.18); border-radius:10px; background:transparent;
   transition: border-color .15s ease, transform .15s ease, box-shadow .2s ease;
 }
 .cta-outline:hover{ border-color: rgba(255,255,255,.35); transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0,0,0,.25) }
 
-/* ---------- Sections ---------- */
+/* ---------- Sections (OPAQUE to unify background under cards) ---------- */
 .section{
   position:relative;
-  padding: 52px 0 56px;
-  background: var(--panel);
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid rgba(0,0,0,.5);
+  padding:52px 0 56px;
+  background: var(--panel-opaque);
+  border-top:1px solid var(--line);
+  border-bottom:1px solid rgba(0,0,0,.5);
 }
 .section h2{
   margin:24px 0 18px; text-align:center;
   font-size: clamp(22px, 2.4vw, 28px); color: var(--blue-1);
 }
-.hero + .section{ margin-top: 8px; }
+.hero + .section{ margin-top:8px; }
 
 /* ---------- Quickstart ---------- */
-.quickstart{ background: var(--panel-strong) }
+.quickstart{
+  background: var(--panel-strong-opaque); /* solid: no gradient bleed-through */
+}
 
-/* Wider columns per card so code fits */
+/* Wider columns so code fits nicely */
 .qs-grid{
   display:grid;
   grid-template-columns: repeat(3, minmax(340px, 1fr));
   gap:18px; margin-top:16px;
 }
-@media (max-width: 1100px){ .qs-grid{ grid-template-columns: repeat(2, minmax(340px, 1fr)) } }
-@media (max-width: 720px){ .qs-grid{ grid-template-columns:1fr } }
+@media (max-width:1100px){ .qs-grid{ grid-template-columns: repeat(2, minmax(340px,1fr)) } }
+@media (max-width:720px){ .qs-grid{ grid-template-columns:1fr } }
 
 .card{
   background: rgba(255,255,255,.04);
@@ -210,16 +205,16 @@ h1{
 .card h3{ margin:4px 0 10px; font-size:16px }
 .help{ color:var(--muted-2); margin:10px 0 0; font-size:14px }
 
-/* Code block: wrap lines, no horizontal scroll, Copy stays pinned */
+/* Code block: wrap lines, no horizontal scroll; Copy stays pinned */
 .codeblock{
   position:relative;
   background:#0c1426;
   border:1px solid rgba(255,255,255,.07);
   border-radius:10px;
 
-  /* Keep container non-horizontally scrollable; reserve space for Copy */
+  /* keep container static; scroll only inside <pre> and reserve Copy space */
   padding:12px 48px 12px 12px;
-  overflow: hidden;
+  overflow:hidden;
 }
 .codeblock pre{
   margin:0;
@@ -228,28 +223,20 @@ h1{
   line-height:1.45;
   color:#dfe7ff;
 
-  /* Wrap long lines so sideways scroll is not needed */
   white-space: pre-wrap;
   word-break: break-word;
   overflow-wrap: anywhere;
 
-  /* If content is tall, allow vertical scroll inside pre */
-  max-height: 280px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
+  max-height:280px;
+  overflow-y:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
 }
 .copy{
-  position:absolute;
-  top:8px; right:8px;
-  z-index: 1;
-  font-size:12px;
-  padding:6px 9px;
-  cursor:pointer;
-  border-radius:8px;
-  border:1px solid rgba(255,255,255,.18);
-  background:rgba(255,255,255,.06);
-  color:#dfe7ff;
+  position:absolute; top:8px; right:8px; z-index:1;
+  font-size:12px; padding:6px 9px; cursor:pointer;
+  border-radius:8px; border:1px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.06); color:#dfe7ff;
   transition: background .15s ease, transform .1s ease;
 }
 .copy:hover{ background:rgba(255,255,255,.12); transform: translateY(-1px) }
@@ -263,9 +250,8 @@ h1{
   display:grid; grid-template-columns: repeat(4, minmax(0,1fr));
   gap:18px; margin-top:8px;
 }
-@media (max-width: 1024px){ .feature-grid{ grid-template-columns: repeat(2, minmax(0,1fr)) } }
-@media (max-width: 640px){ .feature-grid{ grid-template-columns: 1fr } }
-
+@media (max-width:1024px){ .feature-grid{ grid-template-columns: repeat(2, minmax(0,1fr)) } }
+@media (max-width:640px){ .feature-grid{ grid-template-columns: 1fr } }
 .feature{
   background: rgba(255,255,255,.04); border:1px solid var(--line);
   border-radius:var(--radius); padding:18px 16px; text-align:left;
@@ -277,7 +263,7 @@ h1{
 .feature p{ margin:0; color:#cfe0ff; font-size:14px }
 
 /* ---------- Docs callout ---------- */
-.docs{ background: var(--panel) }
+.docs{ background: var(--panel-opaque) }
 .callout{
   border:1px dashed rgba(255,255,255,.15); background: rgba(255,255,255,.03);
   border-radius:var(--radius); padding:18px;
@@ -315,15 +301,14 @@ h1.reveal{ animation-delay:.15s }
 }
 
 /* ---------- Mobile polish ---------- */
-@media (max-width: 540px){
+@media (max-width:540px){
   .container{ width:94% }
   .hero{
-    /* Smaller top/bottom spacing; let content decide height if needed */
     padding: 8vh 0 5vh;
     padding-top: calc(8vh + var(--nav-h) + env(safe-area-inset-top, 0));
     min-height: auto;
   }
-  .logo{ width: 60%; max-width: 240px }
+  .logo{ width:60%; max-width:240px }
   h1{
     font-size: clamp(24px, 8vw, 34px);
     /* Disable gradient on very small screens to avoid banding */
@@ -341,11 +326,11 @@ h1.reveal{ animation-delay:.15s }
 }
 
 /* Extra small screens */
-@media (max-width: 380px){
-  .logo{ width: 62% }
-  h1{ font-size: 22px }
-  .brandname{ font-size: 14px }
-  .nav-inner{ min-height: 54px }
+@media (max-width:380px){
+  .logo{ width:62% }
+  h1{ font-size:22px }
+  .brandname{ font-size:14px }
+  .nav-inner{ min-height:54px }
 }
 
 /* Feature support fallback */
@@ -356,3 +341,4 @@ h1.reveal{ animation-delay:.15s }
     -webkit-text-fill-color: initial;
   }
 }
+
