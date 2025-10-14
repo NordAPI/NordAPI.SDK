@@ -2,29 +2,29 @@
 <html lang="en">
 <head>
   <!-- Basics -->
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <title>NordAPI – Secure .NET integrations in minutes</title>
-  <meta name="description" content="NordAPI helps .NET teams integrate BankID and Swish in minutes with secure, production-grade SDKs.">
-  <link rel="canonical" href="https://nordapi.net/">
+  <meta name="description" content="NordAPI helps .NET teams integrate BankID and Swish in minutes with secure, production-grade SDKs." />
+  <link rel="canonical" href="https://nordapi.net/" />
 
   <!-- Open Graph -->
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="NordAPI">
-  <meta property="og:title" content="NordAPI – Secure .NET integrations in minutes">
-  <meta property="og:description" content="BankID + Swish SDKs for .NET. Secure, production-ready, and fast to integrate.">
-  <meta property="og:url" content="https://nordapi.net/">
-  <meta property="og:image" content="https://nordapi.net/assets/og/og-image-1200x630.png?v=2">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="NordAPI logo and tagline">
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="NordAPI" />
+  <meta property="og:title" content="NordAPI – Secure .NET integrations in minutes" />
+  <meta property="og:description" content="BankID + Swish SDKs for .NET. Secure, production-ready, and fast to integrate." />
+  <meta property="og:url" content="https://nordapi.net/" />
+  <meta property="og:image" content="https://nordapi.net/assets/og/og-image-1200x630.png?v=2" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="NordAPI logo and tagline" />
 
   <!-- Twitter -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="NordAPI – Secure .NET integrations in minutes">
-  <meta name="twitter:description" content="BankID + Swish SDKs for .NET. Secure, production-ready, and fast to integrate.">
-  <meta name="twitter:image" content="https://nordapi.net/assets/og/og-image-1200x630.png?v=2">
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="NordAPI – Secure .NET integrations in minutes" />
+  <meta name="twitter:description" content="BankID + Swish SDKs for .NET. Secure, production-ready, and fast to integrate." />
+  <meta name="twitter:image" content="https://nordapi.net/assets/og/og-image-1200x630.png?v=2" />
 
   <!-- Security / privacy -->
   <meta http-equiv="Content-Security-Policy"
@@ -34,22 +34,24 @@
                  font-src 'self' data: https://fonts.gstatic.com;
                  script-src 'self';
                  connect-src 'self'">
-  <meta name="referrer" content="no-referrer-when-downgrade">
-  <meta name="theme-color" content="#0a58ff">
+  <meta name="referrer" content="no-referrer-when-downgrade" />
+  <meta name="theme-color" content="#0a58ff" />
 
-  <!-- Icons & PWA manifest -->
-  <link rel="icon" href="/assets/icons/favicon.ico?v=2" sizes="any">
-  <link rel="icon" href="/assets/icons/icon-192.png?v=2" type="image/png">
-  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png?v=2">
-  <link rel="manifest" href="/manifest.json">
+  <!-- Favicons & PWA (PNG first; ICO last as optional fallback) -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png?v=7" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/icons/favicon-16.png?v=7" />
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png?v=7" />
+  <link rel="manifest" href="/manifest.json?v=7" />
+  <!-- Optional fallback; leave last so browsers prefer PNG -->
+  <link rel="icon" href="/assets/icons/favicon.ico?v=7" sizes="any" />
 
   <!-- Preload hero image -->
-  <link rel="preload" as="image" href="/assets/nordapi-logo.png">
+  <link rel="preload" as="image" href="/assets/nordapi-logo.png" />
 
   <!-- Fonts + styles -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="style.css?v=mobile-fix-3">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="style.css?v=mobile-fix-3" />
 
   <!-- Structured Data -->
   <script type="application/ld+json">
@@ -58,7 +60,7 @@
     "@type": "Organization",
     "name": "NordAPI",
     "url": "https://nordapi.net/",
-    "logo": "https://nordapi.net/assets/icons/icon-512.png",
+    "logo": "https://nordapi.net/assets/icons/icon-512.png?v=7",
     "description": "Secure .NET SDKs for BankID and Swish integrations"
   }
   </script>
@@ -77,7 +79,7 @@
   <nav class="topnav" aria-label="Primary navigation">
     <div class="container nav-inner">
       <a class="brand" href="#top" aria-label="NordAPI home">
-        <img src="assets/nordapi-logo.png" alt="NordAPI logo" class="brandmark" width="28" height="28">
+        <img src="assets/nordapi-logo.png" alt="NordAPI logo" class="brandmark" width="28" height="28" />
         <span class="brandname">NordAPI</span>
       </a>
 
@@ -97,7 +99,7 @@
   <!-- HERO -->
   <header id="top" class="hero">
     <div class="container hero-inner">
-      <img src="assets/nordapi-logo.png" alt="NordAPI" class="logo reveal glow" width="320" height="320">
+      <img src="assets/nordapi-logo.png" alt="NordAPI" class="logo reveal glow" width="320" height="320" />
       <h1 class="reveal">Secure .NET integrations in minutes</h1>
       <p class="subtitle reveal">Swish &amp; BankID SDK by NordAPI • mTLS • HMAC • Anti-replay</p>
 
@@ -237,4 +239,3 @@ await swish.PayAsync(new SwishPaymentRequest {
   <script src="app.js" defer></script>
 </body>
 </html>
-
