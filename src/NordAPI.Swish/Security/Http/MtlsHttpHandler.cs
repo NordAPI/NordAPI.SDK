@@ -5,8 +5,8 @@ using System.Security.Cryptography.X509Certificates;
 namespace NordAPI.Swish.Security.Http;
 
 /// <summary>
-/// HttpClientHandler som bifogar klientcertifikat (mTLS).
-/// OBS: Dev-läget (skippa servercert-validering) är tillåtet endast i DEBUG.
+/// HttpClientHandler that attaches a client certificate (mTLS).
+/// NOTE: Dev mode (skip server certificate validation) is allowed only in DEBUG.
 /// </summary>
 public sealed class MtlsHttpHandler : HttpClientHandler
 {
@@ -15,14 +15,14 @@ public sealed class MtlsHttpHandler : HttpClientHandler
         if (certificate is null) throw new ArgumentNullException(nameof(certificate));
 
 #if !DEBUG
-        // Extra säkerhet: blockera om någon försöker tillåta dev-läget i Release-builds
+        // Extra safety: prohibit enabling dev mode in Release builds
         if (allowInvalidChainForDev)
-            throw new InvalidOperationException("AllowInvalidChainForDev är inte tillåtet i Release-builds.");
+            throw new InvalidOperationException("AllowInvalidChainForDev is not allowed in Release builds.");
 #endif
 
         ClientCertificates.Add(certificate);
 
-        // Endast i lokal/dev: acceptera vilket servercert som helst (t.ex. self-signed/stubbar)
+        // Only in local/dev: accept any server certificate (e.g. self-signed/stubs)
         if (allowInvalidChainForDev)
         {
             ServerCertificateCustomValidationCallback =

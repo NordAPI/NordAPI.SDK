@@ -6,7 +6,7 @@ using NordAPI.Swish.Internal;
 namespace NordAPI.Swish.Security.Http;
 
 /// <summary>
-/// DelegatingHandler som lägger på HMAC-signatur + tidsstämpel + nonce för varje request.
+/// DelegatingHandler that applies HMAC signature + timestamp + nonce for each request.
 /// Canonical: METHOD\nPATH?QUERY\nTIMESTAMP\nNONCE\nBODY
 /// </summary>
 public sealed class HmacSigningHandler : DelegatingHandler

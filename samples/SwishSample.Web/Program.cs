@@ -11,7 +11,7 @@ using NordAPI.Swish.Webhooks;
 var builder = WebApplication.CreateBuilder(args);
 
 // -------------------------------------------------------------
-// Swish SDK-klient (ENV-styrd bas-URL + HMAC). mTLS sätts i SDK:t.
+// Swish SDK client (ENV-driven base URL + HMAC). mTLS is set inside the SDK.
 // -------------------------------------------------------------
 var envName = Environment.GetEnvironmentVariable("SWISH_ENV") ?? "";
 var baseUrl =
@@ -33,9 +33,9 @@ builder.Services.AddSwishClient(opts =>
 });
 
 // -------------------------------------------------------------
-// Webhook-verifiering + nonce-store via våra extensions
-//   - Hemlighet: SWISH_WEBHOOK_SECRET (user-secrets/ENV/CI)
-//   - InMemory som default; Redis om SWISH_REDIS / SWISH_REDIS_CONN / REDIS_URL finns
+// Webhook verification + nonce store via our extensions
+//   - Secret: SWISH_WEBHOOK_SECRET (user-secrets/ENV/CI)
+//   - InMemory as default; Redis if SWISH_REDIS / SWISH_REDIS_CONN / REDIS_URL exists
 // -------------------------------------------------------------
 builder.Services
     .AddSwishWebhookVerification(cfg =>
@@ -48,21 +48,21 @@ builder.Services
             throw new InvalidOperationException("Missing SWISH_WEBHOOK_SECRET.");
 
         cfg.SharedSecret = secret;
-        // Övriga defaults (±5 min skew, 5 min max-age, headernamn) behålls
+        // Keep other defaults (±5 min skew, 5 min max-age, header names)
     })
-    .AddNonceStoreFromEnvironment(TimeSpan.FromMinutes(5), "swish:nonce:"); // använder Redis om konfig satt
+    .AddNonceStoreFromEnvironment(TimeSpan.FromMinutes(5), "swish:nonce:"); // uses Redis if configured
 
 var app = builder.Build();
 
 // -------------------------------------------------------------
-// Små hjälpendpoints
+// Small helper endpoints
 // -------------------------------------------------------------
 app.MapGet("/", () => "Swish sample is running. Try /health, /di-check, or POST /webhook/swish");
 app.MapGet("/health", () => "ok");
 app.MapGet("/di-check", (ISwishClient swish) => swish is not null ? "ISwishClient is registered" : "not found");
 
 // -------------------------------------------------------------
-// Webhook-endpoint (HTTPS-krav i prod, signatur + timestamp + nonce)
+// Webhook endpoint (HTTPS required in prod, signature + timestamp + nonce)
 // -------------------------------------------------------------
 app.MapPost("/webhook/swish", async (
     HttpRequest req,
@@ -72,18 +72,18 @@ app.MapPost("/webhook/swish", async (
 {
     var log = loggerFactory.CreateLogger("Swish.Webhook");
 
-    // 1) Kräver HTTPS utanför Development
+    // 1) Require HTTPS outside Development
     if (!env.IsDevelopment() && !req.IsHttps)
         return Results.BadRequest(new { reason = "https-required" });
 
-    // 2) Läs rå body
+    // 2) Read raw body
     req.EnableBuffering();
     string rawBody;
     using (var reader = new StreamReader(req.Body, Encoding.UTF8, detectEncodingFromByteOrderMarks: false, leaveOpen: true))
         rawBody = (await reader.ReadToEndAsync()) ?? string.Empty;
     req.Body.Position = 0;
 
-    // 3) Plocka headers (alias hanteras i verifiern)
+    // 3) Pick headers (aliases are handled in the verifier)
     var tsHeader  = ValueOr(req.Headers["X-Swish-Timestamp"], req.Headers["X-Timestamp"]);
     var sigHeader = ValueOr(req.Headers["X-Swish-Signature"], req.Headers["X-Signature"]);
     var nonce     = ValueOr(req.Headers["X-Swish-Nonce"],      req.Headers["X-Nonce"]);
@@ -98,7 +98,7 @@ app.MapPost("/webhook/swish", async (
         ["X-Swish-Nonce"]     = nonce ?? string.Empty
     };
 
-    // 4) Verifiera
+    // 4) Verify
     var now = DateTimeOffset.UtcNow;
     var result = verifier.Verify(rawBody, headers, now);
 
@@ -121,7 +121,7 @@ app.Run();
 static string ValueOr(StringValues a, StringValues b)
     => string.IsNullOrWhiteSpace(a) ? b.ToString() : a.ToString();
 
-// Exponera Program för tester
+// Expose Program for tests
 public partial class Program { }
 
 

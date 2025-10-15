@@ -1,7 +1,7 @@
 ﻿namespace NordAPI.Swish.Security.Http;
 
 /// <summary>
-/// Begränsar antal samtidiga anrop och/eller minsta tid mellan anrop.
+/// Limits number of concurrent calls and/or minimum time between calls.
 /// </summary>
 public sealed class RateLimitingHandler : DelegatingHandler
 {

@@ -5,8 +5,8 @@ namespace SwishSample.Web.Security;
 public static class RedisReplayGate
 {
     /// <summary>
-    /// Försöker registrera en nonce i Redis med NX + TTL.
-    /// Returnerar true om noncen var NY (acceptera request), false om replay (blockera).
+    /// Attempts to register a nonce in Redis using NX + TTL.
+    /// Returns true if the nonce was NEW (accept the request), false if replay (reject).
     /// </summary>
     public static async Task<bool> TryRegisterNonceAsync(
         IConnectionMultiplexer mux,
@@ -17,12 +17,12 @@ public static class RedisReplayGate
     {
         var db = mux.GetDatabase();
         var key = $"{prefix}:{nonce}";
-        // SET key value NX EX seconds  => endast om nyckeln inte finns, med utgångstid
+        // SET key value NX EX seconds  => only if the key does not exist, with expiry
         var ok = await db.StringSetAsync(
             key, "1",
             expiry: ttl,
             when: When.NotExists);
 
-        return ok; // true = sattes (ny), false = fanns redan (replay)
+        return ok; // true = set (new), false = already existed (replay)
     }
 }

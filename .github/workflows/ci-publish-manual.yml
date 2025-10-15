@@ -3,14 +3,14 @@ name: NuGet Publish (tag + gate)
 on:
   push:
     tags:
-      - 'v*.*.*'   # kör bara när en release-tagg pushas (t.ex. v1.2.3)
+      - 'v*.*.*'   # run only when a release tag is pushed (e.g. v1.2.3)
 
 env:
-  RUN_PUBLISH: 'false'  # säkring: måste ändras till 'true' via PR innan release
+  RUN_PUBLISH: 'false'  # safeguard: must be changed to 'true' via PR before release
 
 jobs:
   publish:
-    # dubbelsäkring: kräv både tagg OCH att RUN_PUBLISH är 'true'
+    # double-safeguard: require both a tag AND RUN_PUBLISH == 'true'
     if: ${{ startsWith(github.ref, 'refs/tags/v') && env.RUN_PUBLISH == 'true' }}
     runs-on: ubuntu-latest
 
@@ -23,5 +23,5 @@ jobs:
       - run: dotnet pack -c Release -o out /p:ContinuousIntegrationBuild=true
       - name: Push to NuGet.org
         env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}  # lämnas tomt tills NI VILL lansera
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}  # left empty until YOU WANT to release
         run: dotnet nuget push "out/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key "$NUGET_API_KEY" --skip-duplicate

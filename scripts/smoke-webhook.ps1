@@ -4,10 +4,10 @@
   [switch]$Replay
 )
 
-# 1) EXAKT body-sträng (ändra om du vill, men håll den identisk i både signering och sändning)
+# 1) EXACT body string (change if you want, but keep it identical in both signing and sending)
 $Body = '{"id":"smoke-verify","amount":50}'
 
-# 2) Bygg ts/nonce + canonical
+# 2) Build ts/nonce + canonical
 $Ts    = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
 $Nonce = [guid]::NewGuid().ToString('N')
 $Canon = "$Ts`n$Nonce`n$Body"
@@ -25,7 +25,7 @@ Write-Host "MSG     :`n$Canon"
 Write-Host "SIG_B64 : $SigB64"
 Write-Host "--------`n"
 
-# 4) Skicka med EXAKTA bytes (inte hashtable, inte auto-JSON)
+# 4) Send using EXACT bytes (not hashtable, not auto-JSON)
 $Bytes = [Text.Encoding]::UTF8.GetBytes($Body)
 try {
   $resp = Invoke-RestMethod -Method Post -Uri $Url `
@@ -50,7 +50,7 @@ try {
 if ($Replay) {
   Write-Host "(replay) ---"
   try {
-    # Skicka igen med SAMMA nonce/signatur (ska bli 401 replay)
+    # Send again with the SAME nonce/signature (should become 401 replay)
     $resp2 = Invoke-RestMethod -Method Post -Uri $Url `
       -Headers @{
         'X-Swish-Timestamp' = "$Ts"

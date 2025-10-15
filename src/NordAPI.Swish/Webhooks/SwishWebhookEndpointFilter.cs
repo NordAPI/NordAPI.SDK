@@ -20,14 +20,14 @@ public sealed class SwishWebhookEndpointFilter : IEndpointFilter
     {
         var req = context.HttpContext.Request;
 
-        // Läs rå body
+        // Read raw body
         req.EnableBuffering();
         string rawBody;
         using (var reader = new StreamReader(req.Body, Encoding.UTF8, detectEncodingFromByteOrderMarks: false, leaveOpen: true))
             rawBody = (await reader.ReadToEndAsync()) ?? string.Empty;
         req.Body.Position = 0;
 
-        // Plocka headers (alias stöds i verifieraren)
+        // Pick headers (aliases are supported in the verifier)
         string Get(string name) => req.Headers.TryGetValue(name, out var v) ? v.ToString() : string.Empty;
         var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -45,7 +45,7 @@ public sealed class SwishWebhookEndpointFilter : IEndpointFilter
                 statusCode: StatusCodes.Status401Unauthorized);
         }
 
-        // Markera som verifierad om konsumenten vill läsa av det i handlern
+        // Mark as verified if the consumer wants to read it in the handler
         context.HttpContext.Items["SwishWebhookVerified"] = true;
 
         return await next(context);
