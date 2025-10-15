@@ -107,6 +107,7 @@ public class PaymentsController : ControllerBase
 
 ---
 
+
 ## 🔐 mTLS via miljövariabler (valfritt)
 
 Aktivera mutual TLS med klientcertifikat (PFX):
