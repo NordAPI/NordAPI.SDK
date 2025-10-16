@@ -456,4 +456,85 @@ h1.reveal{ animation-delay:.15s }
 }
 .logo:hover{ transform: translateY(-2px) scale(1.01) }
 
+/* === Responsive safety patch for 200% display-scaling and small viewports
+   Paste this at the END of your main stylesheet ========================= */
+
+/* -- tokens for logo sizing */
+:root {
+  --logo-max-desktop: clamp(120px, 28vw, 300px);
+  --logo-max-small: 160px;
+}
+
+/* -- Make header flex children shrinkable and allow wrapping */
+.nav-inner, .brand, .nav-links, .brandname {
+  min-width: 0; /* allow flex items to shrink instead of overflowing */
+}
+.nav-inner {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap; /* allow nav to wrap on narrow viewports */
+}
+
+/* -- Brand layout: allow name to truncate instead of pushing other items */
+.brand {
+  flex: 0 1 auto;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.brandname {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 60%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* -- Logo: disable percent-only sizing, use a safe max-width */
+.logo {
+  width: auto;
+  max-width: var(--logo-max-desktop);
+  height: auto;
+  flex: 0 0 auto;
+}
+
+/* -- Nav links should not force overflow */
+.nav-links {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+/* -- Ensure hero and content blocks can shrink and wrap */
+.hero-inner, .row, .cta-row, .qs-grid, .feature-grid {
+  min-width: 0;
+}
+.hero-inner {
+  padding: 0 1rem;
+  box-sizing: border-box;
+}
+
+/* -- Protect cards and sections from overflow/overlap */
+.section, .card, .feature, .supercard-inner {
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+/* -- Defensive adjustments for narrow viewports and high-DPI scenarios */
+@media (max-width: 920px) {
+  .brandname { max-width: 50vw; font-size: clamp(14px, 2.4vw, 18px); }
+  .nav-links { gap: 10px; }
+  .hero { padding-top: calc(8vh + var(--nav-h)); }
+  .logo { max-width: var(--logo-max-small); }
+  .cta, .cta-outline { padding: 10px 14px; }
+}
+
+/* === End patch ========================================================= */
+
 
