@@ -389,3 +389,24 @@ h1.reveal{animation-delay:.15s}
   .nav-inner{flex-wrap:wrap}
   .nav-links{min-width:0;flex:0 1 auto}
 }
+
+/* === Mobile/Tablet: crisp separation after hero =================== */
+@media (max-width: 920px){
+  /* Ta bort överdriven höjd + grå “fade” som ser ut som ett block */
+  .hero{
+    min-height: auto !important;
+    padding-bottom: 28px !important;
+  }
+  .hero::after{
+    display: none !important;
+  }
+
+  /* Gör första sektionen lika avgränsad som övriga block */
+  .hero + .section{
+    margin-top: 0 !important;
+    background: var(--panel-opaque) !important;
+    border-top: 1px solid var(--line) !important;
+    box-shadow: 0 -1px 0 rgba(0,0,0,.45) inset; /* subtil “kant” uppåt */
+  }
+}
+
