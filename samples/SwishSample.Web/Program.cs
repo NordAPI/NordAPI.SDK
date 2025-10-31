@@ -1,14 +1,34 @@
-﻿// samples/SwishSample.Web/Program.cs
-
-using System.Globalization;
+﻿using System;
+using System.IO;
 using System.Text;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
 using NordAPI.Swish;
 using NordAPI.Swish.DependencyInjection;
 using NordAPI.Swish.Webhooks;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// --- Redis connection string discovery (standard + aliases) ---
+var redisConn =
+    Environment.GetEnvironmentVariable("SWISH_REDIS")
+    ?? Environment.GetEnvironmentVariable("REDIS_URL")
+    ?? Environment.GetEnvironmentVariable("SWISH_REDIS_CONN");
+
+// If provided, wire up RedisNonceStore; otherwise fall back to in-memory.
+if (!string.IsNullOrWhiteSpace(redisConn))
+{
+    // Prefer a single shared multiplexer for app lifetime.
+    var mux = ConnectionMultiplexer.Connect(redisConn);
+    // ownsMux: true, since we just created it here.
+    builder.Services.AddSingleton<ISwishNonceStore>(_ => new RedisNonceStore(mux, ownsMux: true));
+}
+else
+{
+    builder.Services.AddSingleton<ISwishNonceStore, InMemoryNonceStore>();
+}
 
 // -------------------------------------------------------------
 // Swish SDK client (ENV-driven base URL + HMAC). mTLS is set inside the SDK.
@@ -33,9 +53,7 @@ builder.Services.AddSwishClient(opts =>
 });
 
 // -------------------------------------------------------------
-// Webhook verification + nonce store via our extensions
-//   - Secret: SWISH_WEBHOOK_SECRET (user-secrets/ENV/CI)
-//   - InMemory as default; Redis if SWISH_REDIS / SWISH_REDIS_CONN / REDIS_URL exists
+// Webhook verification (secret via env / config)
 // -------------------------------------------------------------
 builder.Services
     .AddSwishWebhookVerification(cfg =>
@@ -49,8 +67,9 @@ builder.Services
 
         cfg.SharedSecret = secret;
         // Keep other defaults (±5 min skew, 5 min max-age, header names)
-    })
-    .AddNonceStoreFromEnvironment(TimeSpan.FromMinutes(5), "swish:nonce:"); // uses Redis if configured
+    });
+// Note: Nonce store registreras manuellt via blocket ovan (Redis/InMemory).
+// Därför anropar vi inte .AddNonceStoreFromEnvironment här.
 
 var app = builder.Build();
 
@@ -123,6 +142,7 @@ static string ValueOr(StringValues a, StringValues b)
 
 // Expose Program for tests
 public partial class Program { }
+
 
 
 
