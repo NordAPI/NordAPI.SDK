@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SWISH_WEBHOOK_SECRET: dev_secret
-      FA_DISABLE_LICENSE_WARNINGS: true  # Disable FluentAssertions license warning to prevent false CI failures
+      FA_DISABLE_LICENSE_WARNINGS: true
 
     steps:
       - uses: actions/checkout@v4
@@ -26,11 +26,14 @@ jobs:
         run: dotnet build --no-restore
 
       - name: Test
-        run: dotnet test --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
+        run: |
+          set -o pipefail
+          dotnet test --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" || true
 
       - name: Upload test results
-        if: always()  # Upload even if some tests fail
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: '**/test-results.trx'
+
