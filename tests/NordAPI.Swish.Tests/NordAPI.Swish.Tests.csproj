@@ -48,5 +48,11 @@
     <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
 
-</Project>
+  <!-- Ensure xunit.runner.json is copied so parallelization is disabled in CI -->
+  <ItemGroup>
+    <None Update="xunit.runner.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 
+</Project>
