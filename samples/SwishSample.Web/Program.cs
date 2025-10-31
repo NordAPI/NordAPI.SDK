@@ -68,8 +68,8 @@ builder.Services
         cfg.SharedSecret = secret;
         // Keep other defaults (±5 min skew, 5 min max-age, header names)
     });
-// Note: Nonce store registreras manuellt via blocket ovan (Redis/InMemory).
-// Därför anropar vi inte .AddNonceStoreFromEnvironment här.
+// Note: The nonce store is registered manually above (Redis/InMemory).
+// Therefore we do not call .AddNonceStoreFromEnvironment here.
 
 var app = builder.Build();
 

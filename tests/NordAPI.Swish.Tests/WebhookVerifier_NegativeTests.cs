@@ -83,7 +83,7 @@ namespace NordAPI.Swish.Tests
                   .Should().BeFalse();
             result.Reason!
                   .ToLowerInvariant()
-                  .Should().ContainAny("signature", "mismatch", "invalid", "signatur");
+                  .Should().ContainAny("signature", "mismatch", "invalid");
         }
 
         [Fact]
@@ -129,7 +129,8 @@ namespace NordAPI.Swish.Tests
                   .Should().BeFalse();
             result.Reason!
                   .ToLowerInvariant()
-                  .Should().ContainAny("missing", "signature", "signatur", "saknar");
+                  .Should().ContainAny("missing", "signature");
+
         }
     }
 }
