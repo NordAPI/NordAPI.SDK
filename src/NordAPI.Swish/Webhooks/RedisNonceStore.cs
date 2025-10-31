@@ -16,6 +16,7 @@ public sealed class RedisNonceStore : ISwishNonceStore, IDisposable
 {
     private readonly IConnectionMultiplexer _mux;
     private readonly string _prefix;
+    private readonly bool _ownsMux;
 
     /// <summary>
     /// Creates a new Redis nonce store using a connection string.
@@ -29,6 +30,7 @@ public sealed class RedisNonceStore : ISwishNonceStore, IDisposable
 
         _mux = ConnectionMultiplexer.Connect(connectionString);
         _prefix = string.IsNullOrWhiteSpace(prefix) ? "swish:nonce:" : prefix;
+        _ownsMux = true; // this instance created the multiplexer
     }
 
     /// <summary>
@@ -36,10 +38,12 @@ public sealed class RedisNonceStore : ISwishNonceStore, IDisposable
     /// </summary>
     /// <param name="mux">An existing <see cref="IConnectionMultiplexer"/> instance.</param>
     /// <param name="prefix">Optional key prefix, defaults to <c>"swish:nonce:"</c>.</param>
-    public RedisNonceStore(IConnectionMultiplexer mux, string prefix = "swish:nonce:")
+    /// <param name="ownsMux">Whether this instance owns the multiplexer and should dispose it.</param>
+    public RedisNonceStore(IConnectionMultiplexer mux, string prefix = "swish:nonce:", bool ownsMux = false)
     {
         _mux = mux ?? throw new ArgumentNullException(nameof(mux));
         _prefix = string.IsNullOrWhiteSpace(prefix) ? "swish:nonce:" : prefix;
+        _ownsMux = ownsMux;
     }
 
     /// <inheritdoc />
@@ -65,7 +69,9 @@ public sealed class RedisNonceStore : ISwishNonceStore, IDisposable
     /// </summary>
     public void Dispose()
     {
-        if (_mux is ConnectionMultiplexer cm)
-            cm.Dispose();
+        if (_ownsMux)
+        {
+            try { _mux?.Dispose(); } catch { /* ignore */ }
+        }
     }
 }
