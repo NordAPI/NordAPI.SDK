@@ -1,77 +1,41 @@
-﻿# ------------------------------------------------------------
-# Core normalization: keep LF in the repo, allow native EOL on checkout
-# ------------------------------------------------------------
-*               text=auto
+# ---------- Text normalization ----------
+* text=auto
 
-# ------------------------------------------------------------
-# Windows scripts: force CRLF in working tree for compatibility
-# ------------------------------------------------------------
-*.ps1           text eol=crlf
-*.bat           text eol=crlf
-*.cmd           text eol=crlf
+# Force LF for code and config (cross-platform friendly)
+*.cs      text eol=lf
+*.csproj  text eol=lf
+*.sln     text eol=lf
+*.props   text eol=lf
+*.targets text eol=lf
+*.json    text eol=lf
+*.yml     text eol=lf
+*.yaml    text eol=lf
+*.xml     text eol=lf
+*.md      text eol=lf
+*.ts      text eol=lf
+*.js      text eol=lf
+*.css     text eol=lf
+*.html    text eol=lf
+*.sh      text eol=lf
+*.cmd     text eol=crlf
+*.bat     text eol=crlf
 
-# ------------------------------------------------------------
-# Unix shell scripts & CI configs: enforce LF
-# ------------------------------------------------------------
-*.sh            text eol=lf
-*.bash          text eol=lf
-*.yml           text eol=lf
-*.yaml          text eol=lf
-.github/**      text eol=lf
+# PowerShell scripts (Windows dev ergonomics): CRLF
+*.ps1     text eol=crlf
 
-# ------------------------------------------------------------
-# Source & project files (normalize, no forced EOL)
-# ------------------------------------------------------------
-*.cs            text
-*.csproj        text
-*.sln           text
-*.props         text
-*.targets       text
-*.config        text
-*.json          text
-*.nuspec        text
-*.md            text
-*.html          text
-*.css           text
-*.js            text
-*.ts            text
-*.xml           text
-*.txt           text
-*.svg           text
-
-# ------------------------------------------------------------
-# Binary assets (never EOL-convert; diff as binary)
-# ------------------------------------------------------------
-*.png           binary
-*.jpg           binary
-*.jpeg          binary
-*.gif           binary
-*.ico           binary
-*.webp          binary
-*.pdf           binary
-*.woff          binary
-*.woff2         binary
-*.ttf           binary
-*.otf           binary
-*.zip           binary
-*.7z            binary
-*.gz            binary
-*.bz2           binary
-*.pfx           binary
-*.p12           binary
-*.pem           binary
-*.cer           binary
-*.crt           binary
-*.key           binary
-*.snk           binary
-*.dll           binary
-*.exe           binary
-
-# ------------------------------------------------------------
-# (Optional) GitHub Linguist: mark docs as documentation
-# ------------------------------------------------------------
-docs/*          linguist-documentation
-
-
-
-
+# ---------- Binary files ----------
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.gif     binary
+*.svg     text
+*.ico     binary
+*.pdf     binary
+*.zip     binary
+*.7z      binary
+*.pfx     binary
+*.p12     binary
+*.pem     text
+*.key     text
+*.crt     text
+*.cer     text
