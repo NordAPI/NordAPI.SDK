@@ -11,6 +11,9 @@ using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Detect xUnit test host (so we can relax HTTPS in tests)
+var isTestHost = AppDomain.CurrentDomain.FriendlyName?.IndexOf("testhost", StringComparison.OrdinalIgnoreCase) >= 0;
+
 // --- Redis connection string discovery (standard + aliases) ---
 var redisConn =
     Environment.GetEnvironmentVariable("SWISH_REDIS")
@@ -19,8 +22,6 @@ var redisConn =
 
 // --- Production guard: require a persistent nonce store in Production (skip under test host) ---
 var hostingEnv = builder.Environment;
-var isTestHost = AppDomain.CurrentDomain.FriendlyName?.IndexOf("testhost", StringComparison.OrdinalIgnoreCase) >= 0;
-
 if (hostingEnv.IsProduction() && !isTestHost && string.IsNullOrWhiteSpace(redisConn))
 {
     throw new InvalidOperationException(
@@ -30,6 +31,7 @@ if (hostingEnv.IsProduction() && !isTestHost && string.IsNullOrWhiteSpace(redisC
 // --- Nonce store registration: Redis when configured; otherwise in-memory (dev only) ---
 if (!string.IsNullOrWhiteSpace(redisConn))
 {
+    // Prefer a single shared multiplexer for app lifetime.
     var mux = ConnectionMultiplexer.Connect(redisConn);
     builder.Services.AddSingleton<ISwishNonceStore>(_ => new RedisNonceStore(mux, ownsMux: true));
 }
@@ -79,7 +81,7 @@ builder.Services
 // Note: Nonce store is registered manually above (Redis/InMemory).
 
 // -------------------------------------------------------------
-// Health checks: always register (no Redis probe to keep build simple)
+// Health checks: always register (keep simple; no Redis probe here)
 // -------------------------------------------------------------
 builder.Services.AddHealthChecks();
 
@@ -104,8 +106,8 @@ app.MapPost("/webhook/swish", async (
 {
     var log = loggerFactory.CreateLogger("Swish.Webhook");
 
-    // 1) Require HTTPS outside Development
-    if (!env.IsDevelopment() && !req.IsHttps)
+    // 1) Require HTTPS outside Development (but allow under test host)
+    if (!env.IsDevelopment() && !isTestHost && !req.IsHttps)
         return Results.BadRequest(new { reason = "https-required" });
 
     // 2) Read raw body
@@ -155,11 +157,3 @@ static string ValueOr(StringValues a, StringValues b)
 
 // Expose Program for tests
 public partial class Program { }
-
-
-
-
-
-
-
-
