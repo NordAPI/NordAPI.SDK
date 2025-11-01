@@ -1,5 +1,12 @@
 # NordAPI.Swish SDK
 
+> **Produktionsnotis**
+> Minneslagring av nonce är endast för **utvecklingsmiljö**. I produktion **måste** du använda en persistent lagring (Redis/DB).
+> Ange `SWISH_REDIS` (eller `REDIS_URL` / `SWISH_REDIS_CONN`). Exempelappen stoppar start i `Production` om ingen Redis är satt.
+
+**Licensnotis:** NordAPI är ett SDK. Du behöver egna Swish/BankID-avtal och certifikat. NordAPI tillhandahåller inte dessa.
+
+
 Officiellt NordAPI SDK för Swish och kommande BankID-integrationer.
 
 [![Build](https://github.com/NordAPI/NordAPI.SwishSdk/actions/workflows/ci.yml/badge.svg)](https://github.com/NordAPI/NordAPI.SwishSdk/actions/workflows/ci.yml)
@@ -7,11 +14,11 @@ Officiellt NordAPI SDK för Swish och kommande BankID-integrationer.
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 ![.NET](https://img.shields.io/badge/.NET-7%2B-blueviolet)
 
-> 🇬🇧 English version: [README.md](./README.md)  
+> 🇬🇧 English version: [README.md](./README.md)
 > ✅ Se även: [Integration Checklist](./docs/integration-checklist.md)
 
-Ett lättviktigt och säkert .NET SDK för att integrera **Swish-betalningar och återköp** i test- och utvecklingsmiljöer.  
-Inkluderar inbyggt stöd för HMAC-autentisering, mTLS och hastighetsbegränsning.  
+Ett lättviktigt och säkert .NET SDK för att integrera **Swish-betalningar och återköp** i test- och utvecklingsmiljöer.
+Inkluderar inbyggt stöd för HMAC-autentisering, mTLS och hastighetsbegränsning.
 💡 *Stöd för BankID kommer härnäst — håll utkik efter paketet NordAPI.BankID.*
 
 **Kräver .NET 7+ (LTS-kompatibel)**
@@ -35,11 +42,11 @@ Inkluderar inbyggt stöd för HMAC-autentisering, mTLS och hastighetsbegränsnin
 ---
 
 ## 🚀 Funktioner
-- ✅ Skapa och verifiera Swish-betalningar  
-- 🔁 Stöd för återköp  
-- 🔐 HMAC + mTLS-stöd  
-- 📉 Hastighetsbegränsning  
-- 🧪 ASP.NET Core-integration  
+- ✅ Skapa och verifiera Swish-betalningar
+- 🔁 Stöd för återköp
+- 🔐 HMAC + mTLS-stöd
+- 📉 Hastighetsbegränsning
+- 🧪 ASP.NET Core-integration
 - 🧰 Miljövariabelhantering
 
 ---
@@ -48,9 +55,9 @@ Inkluderar inbyggt stöd för HMAC-autentisering, mTLS och hastighetsbegränsnin
 
 Med detta SDK får du en fungerande Swish-klient på bara några minuter:
 
-- **HttpClientFactory** med retry och rate limiting  
-- **Inbyggd HMAC-signering**  
-- **mTLS (valfritt)** via miljövariabler — strikt kedja i Release; avslappnad endast i Debug  
+- **HttpClientFactory** med retry och rate limiting
+- **Inbyggd HMAC-signering**
+- **mTLS (valfritt)** via miljövariabler — strikt kedja i Release; avslappnad endast i Debug
 - **Webhook-verifiering** med replay-skydd (nonce-store)
 
 ### 1) Installera / referera
@@ -118,13 +125,13 @@ public class PaymentsController : ControllerBase
 
 Aktivera mutual TLS med klientcertifikat (PFX):
 
-- `SWISH_PFX_PATH` — sökväg till `.pfx`  
-- `SWISH_PFX_PASSWORD` — lösenord till certifikatet  
+- `SWISH_PFX_PATH` — sökväg till `.pfx`
+- `SWISH_PFX_PASSWORD` — lösenord till certifikatet
 
 **Beteende:**
-- Inget certifikat → fallback utan mTLS.  
-- **Debug:** avslappnad servercert-validering (endast lokalt).  
-- **Release:** strikt certkedja (ingen "allow invalid chain").  
+- Inget certifikat → fallback utan mTLS.
+- **Debug:** avslappnad servercert-validering (endast lokalt).
+- **Release:** strikt certkedja (ingen "allow invalid chain").
 
 **Exempel (PowerShell):**
 ```powershell
@@ -149,7 +156,7 @@ Kör sedan i ett nytt PowerShell-fönster:
 .\scripts\smoke-webhook.ps1 -Secret dev_secret -Url http://localhost:5000/webhook/swish
 ```
 
-För snabb manuell testning kan du även POST:a webhooken med **curl** (bash/macOS/Linux).  
+För snabb manuell testning kan du även POST:a webhooken med **curl** (bash/macOS/Linux).
 **Signatur-spec:** HMAC-SHA256 över den kanoniska strängen **`"<timestamp>\n<nonce>\n<body>"`**, med **`SWISH_WEBHOOK_SECRET`** som nyckel. Kodas som **Base64**.
 
 ### Obligatoriska headers
@@ -227,8 +234,8 @@ curl -v -X POST "http://localhost:5000/webhook/swish" \
 
 ## 🧰 Felsökning
 
-- **404 / Connection refused:** Kontrollera att appen lyssnar på rätt URL och port (`--urls`).  
-- **mTLS-fel:** Kontrollera `SWISH_PFX_PATH` + `SWISH_PFX_PASSWORD` och att certifikatet är giltigt.  
+- **404 / Connection refused:** Kontrollera att appen lyssnar på rätt URL och port (`--urls`).
+- **mTLS-fel:** Kontrollera `SWISH_PFX_PATH` + `SWISH_PFX_PASSWORD` och att certifikatet är giltigt.
 - **Replay nekas alltid:** Rensa in-memory/Redis nonce-store eller använd en ny nonce vid test.
 
 ---
@@ -276,9 +283,9 @@ dotnet watch --project .\samples\SwishSample.Web\SwishSample.Web.csproj run
 
 ## ⏱️ HTTP-timeout & återförsök (namngiven klient "Swish")
 
-SDK:t tillhandahåller en **opt-in** namngiven `HttpClient` **"Swish"** med:  
-- **Timeout:** 30 sekunder  
-- **Återförsökspolicy:** upp till 3 försök med exponentiell backoff + jitter  
+SDK:t tillhandahåller en **opt-in** namngiven `HttpClient` **"Swish"** med:
+- **Timeout:** 30 sekunder
+- **Återförsökspolicy:** upp till 3 försök med exponentiell backoff + jitter
   (på statuskoder 408, 429, 5xx, samt `HttpRequestException` och `TaskCanceledException`)
 
 **Aktivera:**
@@ -294,21 +301,21 @@ services.AddHttpClient("Swish")
 ```
 
 **Avaktivera:**
-- Anropa inte `AddSwishHttpClient()` (då används standardpipelinen utan retry och timeout).  
+- Anropa inte `AddSwishHttpClient()` (då används standardpipelinen utan retry och timeout).
 - Eller registrera om `"Swish"` manuellt för att ersätta eller utöka handlers och inställningar.
 
 ---
 
 ## 💬 Få hjälp
 
-- 📂 Öppna [GitHub Issues](https://github.com/NordAPI/NordAPI.SwishSdk/issues) för allmänna frågor eller buggrapporter.  
+- 📂 Öppna [GitHub Issues](https://github.com/NordAPI/NordAPI.SwishSdk/issues) för allmänna frågor eller buggrapporter.
 - 🔒 Säkerhetsärenden? E-posta [security@nordapi.com](mailto:security@nordapi.com).
 
 ---
 
 ## 🛡️ Security Disclosure
 
-Om du hittar ett säkerhetsproblem, rapportera det privat via e-post till `security@nordapi.com`.  
+Om du hittar ett säkerhetsproblem, rapportera det privat via e-post till `security@nordapi.com`.
 Använd **inte** GitHub Issues för säkerhetsärenden.
 
 ---

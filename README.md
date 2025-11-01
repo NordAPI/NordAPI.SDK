@@ -1,5 +1,11 @@
 ﻿# NordAPI.Swish SDK
 
+> **Production notice**
+> In-memory nonce store is for **development only**. In production you **must** use a persistent store (Redis/DB).
+> Set `SWISH_REDIS` (or `REDIS_URL` / `SWISH_REDIS_CONN`). The sample fails fast in `Production` if none is set.
+
+**Licensing notice:** NordAPI is an SDK. You need your own Swish/BankID production agreements and certificates. NordAPI does not provide them.
+
 Official NordAPI SDK for Swish and upcoming BankID integrations.
 
 [![Build](https://github.com/NordAPI/NordAPI.SwishSdk/actions/workflows/ci.yml/badge.svg)](https://github.com/NordAPI/NordAPI.SwishSdk/actions/workflows/ci.yml)
@@ -7,11 +13,11 @@ Official NordAPI SDK for Swish and upcoming BankID integrations.
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 ![.NET](https://img.shields.io/badge/.NET-7%2B-blueviolet)
 
-> 🇸🇪 Swedish version: [README.sv.md](./README.sv.md)  
+> 🇸🇪 Swedish version: [README.sv.md](./README.sv.md)
 > ✅ See also: [Integration Checklist](./docs/integration-checklist.md)
 
-A lightweight and secure .NET SDK for integrating **Swish payments and refunds** in test and development environments.  
-Includes built-in support for HMAC authentication, mTLS, and rate limiting.  
+A lightweight and secure .NET SDK for integrating **Swish payments and refunds** in test and development environments.
+Includes built-in support for HMAC authentication, mTLS, and rate limiting.
 💡 *BankID SDK support is planned next — stay tuned for the NordAPI.BankID package.*
 
 **Requires .NET 7+ (LTS compatible)**
@@ -35,11 +41,11 @@ Includes built-in support for HMAC authentication, mTLS, and rate limiting.
 ---
 
 ## 🚀 Features
-- ✅ Create and verify Swish payments  
-- 🔁 Refund support  
-- 🔐 HMAC + mTLS support  
-- 📉 Rate limiting  
-- 🧪 ASP.NET Core integration  
+- ✅ Create and verify Swish payments
+- 🔁 Refund support
+- 🔐 HMAC + mTLS support
+- 📉 Rate limiting
+- 🧪 ASP.NET Core integration
 - 🧰 Environment variable configuration
 
 ---
@@ -48,9 +54,9 @@ Includes built-in support for HMAC authentication, mTLS, and rate limiting.
 
 With this SDK you get a working Swish client in just minutes:
 
-- **HttpClientFactory** with retry and rate limiting  
-- **Built-in HMAC signing**  
-- **mTLS (optional)** via environment variables — strict chain in Release; relaxed only in Debug  
+- **HttpClientFactory** with retry and rate limiting
+- **Built-in HMAC signing**
+- **mTLS (optional)** via environment variables — strict chain in Release; relaxed only in Debug
 - **Webhook verification** with replay protection (nonce-store)
 
 ### 1) Install / reference
@@ -118,13 +124,13 @@ public class PaymentsController : ControllerBase
 
 Enable mutual TLS with a client certificate (PFX):
 
-- `SWISH_PFX_PATH` — path to `.pfx`  
-- `SWISH_PFX_PASSWORD` — password for the certificate  
+- `SWISH_PFX_PATH` — path to `.pfx`
+- `SWISH_PFX_PASSWORD` — password for the certificate
 
 **Behavior:**
-- No certificate → falls back to non-mTLS.  
-- **Debug:** relaxed server certificate validation (local only).  
-- **Release:** strict chain (no "allow invalid chain").  
+- No certificate → falls back to non-mTLS.
+- **Debug:** relaxed server certificate validation (local only).
+- **Release:** strict chain (no "allow invalid chain").
 
 **Example (PowerShell):**
 ```powershell
@@ -149,7 +155,7 @@ Then, in another PowerShell window, run:
 .\scripts\smoke-webhook.ps1 -Secret dev_secret -Url http://localhost:5000/webhook/swish
 ```
 
-For quick manual testing you can also POST the webhook using **curl** (bash/macOS/Linux).  
+For quick manual testing you can also POST the webhook using **curl** (bash/macOS/Linux).
 **Signature spec:** HMAC-SHA256 over the canonical string **`"<timestamp>\n<nonce>\n<body>"`**, using **`SWISH_WEBHOOK_SECRET`**. Encode as **Base64**.
 
 ### Required request headers
@@ -222,8 +228,8 @@ curl -v -X POST "http://localhost:5000/webhook/swish"   -H "Content-Type: applic
 
 ## 🧰 Troubleshooting
 
-- **404 / Connection refused:** Make sure your app listens on the right URL/port (`--urls`).  
-- **mTLS errors:** Verify `SWISH_PFX_PATH` + `SWISH_PFX_PASSWORD` and ensure the certificate chain is valid.  
+- **404 / Connection refused:** Make sure your app listens on the right URL/port (`--urls`).
+- **mTLS errors:** Verify `SWISH_PFX_PATH` + `SWISH_PFX_PASSWORD` and ensure the certificate chain is valid.
 - **Replay always denied:** Clear the in-memory/Redis nonce store or use a fresh nonce when testing.
 
 ---
@@ -271,9 +277,9 @@ dotnet watch --project .\samples\SwishSample.Web\SwishSample.Web.csproj run
 
 ## ⏱️ HTTP timeout & retries (named client "Swish")
 
-The SDK provides an **opt-in** named `HttpClient` **"Swish"** with:  
-- **Timeout:** 30 seconds  
-- **Retry policy:** up to 3 retries with exponential backoff + jitter  
+The SDK provides an **opt-in** named `HttpClient` **"Swish"** with:
+- **Timeout:** 30 seconds
+- **Retry policy:** up to 3 retries with exponential backoff + jitter
   (on status codes 408, 429, 5xx, `HttpRequestException`, and `TaskCanceledException`)
 
 **Enable:**
@@ -289,21 +295,21 @@ services.AddHttpClient("Swish")
 ```
 
 **Disable:**
-- Do not call `AddSwishHttpClient()` (the default pipeline will be used — no retry/timeout).  
+- Do not call `AddSwishHttpClient()` (the default pipeline will be used — no retry/timeout).
 - Or re-register `"Swish"` manually to replace handlers or settings.
 
 ---
 
 ## 💬 Getting help
 
-- 📂 Open [GitHub Issues](https://github.com/NordAPI/NordAPI.SwishSdk/issues) for general questions or bug reports.  
+- 📂 Open [GitHub Issues](https://github.com/NordAPI/NordAPI.SwishSdk/issues) for general questions or bug reports.
 - 🔒 Security concerns? Email [security@nordapi.com](mailto:security@nordapi.com).
 
 ---
 
 ## 🛡️ Security Disclosure
 
-If you discover a security issue, please report it privately to `security@nordapi.com`.  
+If you discover a security issue, please report it privately to `security@nordapi.com`.
 Do **not** use GitHub Issues for security-related matters.
 
 ---

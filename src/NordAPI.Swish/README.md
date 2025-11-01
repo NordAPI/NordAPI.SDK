@@ -1,5 +1,12 @@
 ﻿# NordAPI.Swish SDK
 
+> **Production notice**
+> In-memory nonce store is for **development only**. In production you **must** use a persistent store (Redis/DB).
+> Set `SWISH_REDIS` (or `REDIS_URL` / `SWISH_REDIS_CONN`). The sample fails fast in `Production` if none is set.
+
+**Licensing notice:** NordAPI is an SDK. You need your own Swish/BankID production agreements and certificates. NordAPI does not provide them.
+
+
 Official NordAPI SDK for Swish and upcoming BankID integrations.
 
 [![Build](https://github.com/NordAPI/NordAPI.SwishSdk/actions/workflows/ci.yml/badge.svg)](https://github.com/NordAPI/NordAPI.SwishSdk/actions/workflows/ci.yml)
@@ -7,11 +14,11 @@ Official NordAPI SDK for Swish and upcoming BankID integrations.
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 ![.NET](https://img.shields.io/badge/.NET-7%2B-blueviolet)
 
-> 🇸🇪 Swedish version: [README.sv.md](./README.sv.md)  
+> 🇸🇪 Swedish version: [README.sv.md](./README.sv.md)
 > ✅ See also: [Integration Checklist](./docs/integration-checklist.md)
 
-A lightweight and secure .NET SDK for integrating **Swish payments and refunds** in test and development environments.  
-Includes built-in HMAC signing, optional mTLS, and retry/rate limiting via `HttpClientFactory`.  
+A lightweight and secure .NET SDK for integrating **Swish payments and refunds** in test and development environments.
+Includes built-in HMAC signing, optional mTLS, and retry/rate limiting via `HttpClientFactory`.
 💡 *BankID SDK support is planned next — stay tuned for the `NordAPI.BankID` package.*
 
 **Supported .NET versions:** .NET 7 and 8 (LTS)
@@ -67,7 +74,7 @@ Or via `PackageReference` in `.csproj`:
 
 ## Quickstart — Minimal Program.cs
 
-> This block is **compilable** as a full file in a new `web` project (`dotnet new web`).  
+> This block is **compilable** as a full file in a new `web` project (`dotnet new web`).
 > File: `Program.cs`
 
 ```csharp
@@ -187,7 +194,7 @@ curl -v -X POST http://localhost:5000/payments \
 
 - Your backend creates the payment via `CreatePaymentAsync`.
 - The end-user approves in the Swish app.
-- Swish POSTs the result to your **webhook** (`callbackUrl`).  
+- Swish POSTs the result to your **webhook** (`callbackUrl`).
   Your webhook must verify HMAC (`X-Swish-Signature`) as **Base64** HMAC-SHA256 of `"<ts>\n<nonce>\n<body>"` (UTF-8).
 
 ---
@@ -227,8 +234,8 @@ $env:SWISH_PFX_PASSWORD = "secret-password"
 ```
 
 **Behavior**
-- No certificate → fallback without mTLS.  
-- **Debug:** relaxed server certificate validation (local only).  
+- No certificate → fallback without mTLS.
+- **Debug:** relaxed server certificate validation (local only).
 - **Release:** strict certificate chain (no “allow invalid chain”).
 
 ---
@@ -262,8 +269,8 @@ Run the smoke test in another terminal:
 .\scripts\smoke-webhook.ps1 -Secret dev_secret -Url http://localhost:5000/webhook/swish
 ```
 
-For quick manual testing you can also POST the webhook using **curl** (bash/macOS/Linux).  
-**Signature spec:** HMAC-SHA256 over the canonical string `"<timestamp>\n<nonce>\n<body>"`, using `SWISH_WEBHOOK_SECRET`. Encode as **Base64**.  
+For quick manual testing you can also POST the webhook using **curl** (bash/macOS/Linux).
+**Signature spec:** HMAC-SHA256 over the canonical string `"<timestamp>\n<nonce>\n<body>"`, using `SWISH_WEBHOOK_SECRET`. Encode as **Base64**.
 
 > 🧩 **Note:** Sign the exact UTF‑8 bytes of the compact JSON body (Content-Type: `application/json; charset=utf-8`). Any whitespace or prettifying will break signature verification.
 
@@ -373,7 +380,7 @@ public sealed record CreateRefundResponse(
 ## Error Scenarios & Retry Policy
 
 The SDK registers a named `HttpClient` **"Swish"** with:
-- **Timeout:** 30 seconds  
+- **Timeout:** 30 seconds
 - **Retry:** up to 3 attempts (exponential backoff + jitter) on `408`, `429`, `5xx`, `HttpRequestException`, `TaskCanceledException` (timeout).
 
 Enable/extend:
@@ -384,16 +391,16 @@ services.AddHttpClient("Swish")
 ```
 
 Common responses:
-- **400 Bad Request** → validation error (check required fields).  
-- **401 Unauthorized** → invalid `SWISH_API_KEY`/`SWISH_SECRET` or missing headers.  
-- **429 Too Many Requests** → follow retry policy/backoff.  
+- **400 Bad Request** → validation error (check required fields).
+- **401 Unauthorized** → invalid `SWISH_API_KEY`/`SWISH_SECRET` or missing headers.
+- **429 Too Many Requests** → follow retry policy/backoff.
 - **5xx** → transient; retry automatically triggered by pipeline.
 
 ---
 
 ## Security Recommendations
-- Use **User-Secrets** / Key Vault for secrets — never hardcode in code or commit to the repo.  
-- mTLS “allow invalid chain” must **only** be used locally (Debug). In production, enforce a valid chain.  
+- Use **User-Secrets** / Key Vault for secrets — never hardcode in code or commit to the repo.
+- mTLS “allow invalid chain” must **only** be used locally (Debug). In production, enforce a valid chain.
 - Webhook secret (`SWISH_WEBHOOK_SECRET`) should be rotated regularly and stored securely (e.g., Key Vault).
 
 ---
@@ -410,8 +417,8 @@ Common responses:
 ---
 
 ## Release & Versioning
-- **SemVer**: `MAJOR.MINOR.PATCH`  
-- CI publish is gated; tag the repo (e.g., `v1.0.0`) to publish to NuGet.  
+- **SemVer**: `MAJOR.MINOR.PATCH`
+- CI publish is gated; tag the repo (e.g., `v1.0.0`) to publish to NuGet.
 - The README in the package (`PackageReadmeFile`) is shown on NuGet.
 
 Install a specific version:
@@ -422,8 +429,8 @@ dotnet add package NordAPI.Swish --version 1.2.3
 ---
 
 ## FAQ
-**401 in tests** — Check `SWISH_API_KEY`/`SWISH_SECRET` and ensure your clock is synchronized.  
-**Replay always denied** — Change `nonce` between calls and clear in-memory/Redis. Check `SWISH_REDIS`.  
+**401 in tests** — Check `SWISH_API_KEY`/`SWISH_SECRET` and ensure your clock is synchronized.
+**Replay always denied** — Change `nonce` between calls and clear in-memory/Redis. Check `SWISH_REDIS`.
 **mTLS error in production** — Validate `SWISH_PFX_PATH` + `SWISH_PFX_PASSWORD` and the certificate chain.
 
 ---
