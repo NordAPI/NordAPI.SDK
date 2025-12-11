@@ -28,7 +28,8 @@
 }
 
 *{box-sizing:border-box;min-width:0}
-html,body{height:100%;margin:0}
+html{height:100dvh;margin:0}
+body{height:100dvh;margin:0}
 img{max-width:100%;height:auto;display:block;vertical-align:middle}
 
 html{
