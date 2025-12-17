@@ -1,3 +1,4 @@
-﻿Contact: mailto:security@nordapi.net
-Policy: https://nordapi.net/security
-Preferred-Languages: en
+﻿Contact: mailto:info@nordapi.com
+Preferred-Languages: en, sv
+Policy: https://nordapi.net/
+Acknowledgments: https://nordapi.net/
