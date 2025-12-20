@@ -31,6 +31,7 @@ Includes built-in support for HMAC authentication, mTLS, and rate limiting.
 - [🧪 Run & smoke test](#-run--smoke-test)
 - [🌐 Common environment variables](#-common-environment-variables)
 - [🧰 Troubleshooting](#-troubleshooting)
+- [🚦 Go live checklist (customers)](#-go-live-checklist-customers)
 - [🧩 ASP.NET Core integration](#-aspnet-core-integration-strict-validation)
 - [🛠️ Quick development commands](#️-quick-development-commands)
 - [⏱️ HTTP timeout & retries](#️-http-timeout--retries-named-client-swish)
@@ -234,6 +235,36 @@ curl -v -X POST "http://localhost:5000/webhook/swish"   -H "Content-Type: applic
 
 ---
 
+## 🚦 Go live checklist (customers)
+
+Use this checklist before running against real Swish/BankID environments.
+
+### Certificates and secrets
+- Use **your own** production agreements and certificates (mTLS) issued by your bank/provider.
+- Never commit certificates or secrets to source control.
+- Store secrets in environment variables, a secret manager (e.g., Azure Key Vault), or your deployment platform’s secret store.
+- Rotate secrets regularly and immediately on suspicion of exposure.
+
+### HTTPS and transport security
+- Enforce **HTTPS-only** for all webhook endpoints (consider HSTS at the edge).
+- If you terminate TLS at a reverse proxy, ensure the internal hop is trusted and locked down.
+
+### Webhook verification (required)
+- Require these headers:
+  - `X-Swish-Timestamp` (Unix time in **seconds**)
+  - `X-Swish-Nonce`
+  - `X-Swish-Signature` (Base64 HMAC-SHA256)
+- Verify the signature over the canonical string: `"<timestamp>\n<nonce>\n<body>"` using `SWISH_WEBHOOK_SECRET`.
+- Reject requests with timestamp skew outside your allowed window (recommendation: **±5 minutes**).
+- Enforce **anti-replay** by persisting nonces (Redis/DB). Do **not** use in-memory nonce storage in production.
+
+### Operational hardening
+- Disable any debug-only relaxation flags in production (e.g., avoid allowing old timestamps).
+- Add rate limiting and structured logging (avoid PII in logs).
+- Monitor verification failures (signature mismatch, timestamp drift, replay) and alert on anomalies.
+
+---
+
 ## 🧩 ASP.NET Core integration (strict validation)
 
 ```csharp
@@ -245,7 +276,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSwishClient(opts =>
 {
     opts.BaseAddress = new Uri(Environment.GetEnvironmentVariable("SWISH_BASE_URL")
-        ?? throw new InvalidOperationException("Missing SWISH_BASE_URL"));
+        ?? throw new InvalidOperationException("Missing SWISH_BASE_URL");
     opts.ApiKey = Environment.GetEnvironmentVariable("SWISH_API_KEY")
         ?? throw new InvalidOperationException("Missing SWISH_API_KEY");
     opts.Secret = Environment.GetEnvironmentVariable("SWISH_SECRET")

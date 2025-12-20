@@ -32,6 +32,7 @@ Inkluderar inbyggt stöd för HMAC-autentisering, mTLS och hastighetsbegränsnin
 - [🧪 Starta & röktesta](#-starta--röktesta)
 - [🌐 Vanliga miljövariabler](#-vanliga-miljövariabler)
 - [🧰 Felsökning](#-felsökning)
+- [🚦 Go live-checklista (kund)](#-go-live-checklista-kund)
 - [🧩 ASP.NET Core-integration](#-aspnet-core-integration-skärpt-validering)
 - [🛠️ Snabba utvecklingskommandon](#️-snabba-utvecklingskommandon)
 - [⏱️ HTTP-timeout & återförsök](#️-http-timeout--återförsök-namngiven-klient-swish)
@@ -240,6 +241,36 @@ curl -v -X POST "http://localhost:5000/webhook/swish" \
 
 ---
 
+## 🚦 Go live-checklista (kund)
+
+Använd den här checklistan innan du kör mot riktiga Swish/BankID-miljöer.
+
+### Certifikat och hemligheter
+- Använd **egna** produktionsavtal och certifikat (mTLS) från bank/leverantör.
+- Commita aldrig certifikat eller hemligheter i repo.
+- Lagra hemligheter i miljövariabler, en secret manager (t.ex. Azure Key Vault) eller plattformens secret store.
+- Rotera hemligheter regelbundet och direkt vid misstanke om läcka.
+
+### HTTPS och transportskydd
+- Kör **endast HTTPS** för webhook-endpoints (överväg HSTS vid edge).
+- Om du terminerar TLS i en reverse proxy: lås ner och lita på interna hopp.
+
+### Webhook-verifiering (krav)
+- Kräv dessa headers:
+  - `X-Swish-Timestamp` (Unix-tid i **sekunder**)
+  - `X-Swish-Nonce`
+  - `X-Swish-Signature` (Base64 HMAC-SHA256)
+- Verifiera signaturen över den kanoniska strängen: `"<timestamp>\n<nonce>\n<body>"` med `SWISH_WEBHOOK_SECRET`.
+- Neka requests utanför tillåtet tidsfönster (rekommendation: **±5 minuter**).
+- Kör **anti-replay** med persistenta nonces (Redis/DB). Använd **inte** in-memory nonce-store i produktion.
+
+### Drift-härdning
+- Stäng av debug-relaxation i produktion (undvik t.ex. att tillåta gamla timestamps).
+- Lägg på rate limiting och strukturerad loggning (undvik PII i loggar).
+- Bevaka verifieringsfel (signatur mismatch, tidsdrift, replay) och larma vid avvikelser.
+
+---
+
 ## 🧩 ASP.NET Core-integration (skärpt validering)
 
 ```csharp
@@ -251,11 +282,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSwishClient(opts =>
 {
     opts.BaseAddress = new Uri(Environment.GetEnvironmentVariable("SWISH_BASE_URL")
-        ?? throw new InvalidOperationException("Saknar SWISH_BASE_URL"));
+        ?? throw new InvalidOperationException("Saknar SWISH_BASE_URL");
     opts.ApiKey = Environment.GetEnvironmentVariable("SWISH_API_KEY")
-        ?? throw new InvalidOperationException("Saknar SWISH_API_KEY"));
+        ?? throw new InvalidOperationException("Saknar SWISH_API_KEY");
     opts.Secret = Environment.GetEnvironmentVariable("SWISH_SECRET")
-        ?? throw new InvalidOperationException("Saknar SWISH_SECRET"));
+        ?? throw new InvalidOperationException("Saknar SWISH_SECRET");
 });
 
 var app = builder.Build();
