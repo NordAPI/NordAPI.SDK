@@ -1,18 +1,17 @@
-﻿# SwishSample.Web – Local Webhook Test
+# SwishSample.Web — Local webhook test
 
-This is a minimal ASP.NET Core app for testing the webhook endpoint in **NordAPI.Swish SDK**.
+This sample is a minimal ASP.NET Core app for testing the Swish webhook endpoint and verifier in **NordAPI.Swish**.
 
 ## Features
 
-- Swish client registered via Dependency Injection (mocked in dev)
-- Webhook endpoint `/webhook/swish` with verification:
-  - Timestamp validation (±5 min)
-  - HMAC-SHA256 signature check
-  - Replay protection with nonce store (returns 401 if reused)
- - Additional endpoints for health:
-  - `/health`
-  - `/ping`
-  - `/di-check`
+- Webhook endpoint: `POST /webhook/swish`
+- Verification:
+  - Timestamp validation (recommended window: ±5 minutes)
+  - HMAC-SHA256 signature validation (Base64)
+  - Replay protection with a nonce store (nonce reuse is rejected)
+- Health endpoints:
+  - `GET /health`
+  - `GET /di-check`
 
 ---
 
@@ -20,38 +19,71 @@ This is a minimal ASP.NET Core app for testing the webhook endpoint in **NordAPI
 
 - .NET 8 SDK
 - PowerShell 5.1 or later
-- `curl` (located in `C:\Windows\System32`)
+- `curl` (available at `C:\Windows\System32\curl.exe`)
 
 ---
 
 ## Environment variables for local development
 
-Set the following variables before running:
+Recommended defaults:
 
 ```powershell
-$env:ASPNETCORE_ENVIRONMENT   = "Development"
-$env:SWISH_WEBHOOK_SECRET     = "dev_secret"
-$env:SWISH_DEBUG              = "1"
-$env:SWISH_ALLOW_OLD_TS       = "1"
-$env:SWISH_REQUIRE_NONCE      = "0"
-$env:SWISH_NONCE_TTL_SECONDS  = "600"
+$env:ASPNETCORE_ENVIRONMENT  = "Development"
+$env:SWISH_WEBHOOK_SECRET    = "dev_secret"
+$env:SWISH_DEBUG             = "1"
+$env:SWISH_REQUIRE_NONCE     = "1"
+$env:SWISH_NONCE_TTL_SECONDS = "600"
+
+# Dev-only toggle (keep OFF unless you are troubleshooting)
+$env:SWISH_ALLOW_OLD_TS      = "0"
 ```
 
-🔒 NOTE! SWISH_WEBHOOK_SECRET="dev_secret" may only be used for local development.
-In test and production environments, set a real secret value via
-environment variables or KeyVault – never hardcode or commit it in the repo.
+🔒 **Security note:** `SWISH_WEBHOOK_SECRET="dev_secret"` is for local development only.
+In test/production, set a real secret value via environment variables or a secret store (e.g., Azure Key Vault). Never hardcode or commit secrets.
 
 ---
 
-## Start the server
+## Start the server (deterministic URL)
+
 ```powershell
-dotnet watch --project samples/SwishSample.Web run
+dotnet run --project .\samples\SwishSample.Web\SwishSample.Web.csproj --urls http://localhost:5000
+```
+
+(Optional) Auto-reload:
+
+```powershell
+dotnet watch --project .\samples\SwishSample.Web\SwishSample.Web.csproj run -- --urls http://localhost:5000
 ```
 
 ---
 
-## Send test webhook in PowerShell
-# Parameters
+## Smoke test (recommended)
+
+In a second terminal:
+
+```powershell
+.\scripts\smoke-webhook.ps1 -Secret dev_secret -Url http://localhost:5000/webhook/swish
+```
+
+Expected:
+- ✅ **HTTP 200** with `{"received": true}`
+- ✅ Sending the exact same request twice should be rejected as replay (non-200; typically 409 or 401 depending on configuration)
+
+---
+
+## Send a signed test webhook (PowerShell)
+
+This sample verifies the signature over the canonical string:
+
+`"<timestamp>\n<nonce>\n<body>"`
+
+Where:
+- `<timestamp>` is a Unix timestamp in **seconds**
+- `<nonce>` is a unique value per request (GUID recommended)
+- `<body>` is the exact JSON payload (sign the exact UTF-8 bytes)
+
+### 1) Parameters
+
 ```powershell
 $secret   = "dev_secret"
 $bodyJson = '{"id":"test-1","amount":100}'
@@ -59,125 +91,92 @@ $ts       = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
 $nonce    = [guid]::NewGuid().ToString("N")
 ```
 
-# Canonical string: <ts>\n<nonce>\n<body>
+### 2) Canonical string (exact)
+
 ```powershell
-$message = "{0}`n{1}`n{2}" -f $ts, $nonce, $bodyJson
+$canonical = "{0}`n{1}`n{2}" -f $ts, $nonce, $bodyJson
 ```
 
-# HMAC-SHA256
+### 3) HMAC-SHA256 (Base64)
+
 ```powershell
-$key    = [Text.Encoding]::UTF8.GetBytes ($secret)
+$key    = [Text.Encoding]::UTF8.GetBytes($secret)
 $hmac   = [System.Security.Cryptography.HMACSHA256]::new($key)
-$sigB64 = [Convert]::ToBase64String($hmac.ComputeHash([Text.Encoding]::UTF8.GetBytes($message)))
+$sigB64 = [Convert]::ToBase64String(
+  $hmac.ComputeHash([Text.Encoding]::UTF8.GetBytes($canonical))
+)
 ```
 
-# Send
+### 4) Send
+
 ```powershell
 $curl = "$env:SystemRoot\System32\curl.exe"
-$uri  = "http://localhost:5287/webhook/swish"
+$uri  = "http://localhost:5000/webhook/swish"
 
 & $curl -i -X POST $uri `
-  -H "Content-Type: application/json" `
+  -H "Content-Type: application/json; charset=utf-8" `
   -H "X-Swish-Timestamp: $ts" `
   -H "X-Swish-Nonce: $nonce" `
   -H "X-Swish-Signature: $sigB64" `
-  -d $bodyJson
-  ```
+  --data-raw $bodyJson
+```
 
-# Send the same again => should get 401 replay-detected
-```powershell
-& $curl -i -X POST $uri `
-  -H "Content-Type: application/json" `
-  -H "X-Swish-Timestamp: $ts" `
-  -H "X-Swish-Nonce: $nonce" `
-  -H "X-Swish-Signature: $sigB64" `
-  -d $bodyJson
-  ```
-  - If the same nonce is reused, the server will respond with '401 Replay detected.'
+### Replay test
 
-### Webhook behavior
+Re-run the exact same curl command again (same `$ts`, `$nonce`, `$sigB64`). It should be rejected as a replay.
+
+---
+
+## Webhook behavior
 
 When the webhook receives a valid payload, it responds with:
 
 ```json
 { "received": true }
-
-- If a replay or invalid signature is detected, it responds with:
-{ "error": "unauthorized" }
 ```
+
+On replay/signature/header errors, the endpoint returns a non-200 response.
 
 ---
 
 ## QuickStart
+
 ```powershell
 git clone https://github.com/NordAPI/NordAPI.SwishSdk.git
 cd NordAPI.SwishSdk
-```
-
-# Set environment variables
-```powershell
-$env:ASPNETCORE_ENVIRONMENT   = "Development"
-$env:SWISH_WEBHOOK_SECRET     = "dev_secret"
-$env:SWISH_DEBUG              = "1"
-$env:SWISH_ALLOW_OLD_TS       = "1"
-$env:SWISH_REQUIRE_NONCE      = "0"
-$env:SWISH_NONCE_TTL_SECONDS  = "600"
-```
-# Start the server
-```powershell
-dotnet watch --project samples/SwishSample.Web run
+dotnet run --project .\samples\SwishSample.Web\SwishSample.Web.csproj --urls http://localhost:5000
 ```
 
 ---
 
-## Alternative: ISO-8601 timestamp
-```powershell
-$secret   = "dev_secret"
-$bodyJson = '{"id":"test-1","amount":100}'
-$tsIso    = [DateTimeOffset]::UtcNow.ToUniversalTime().ToString("o")
-$nonce    = [guid]::NewGuid().ToString("N")
+## Advanced: Named HttpClient with mTLS (optional)
 
-$message  = "{0}`n{1}`n{2}" -f $tsIso, $nonce, $bodyJson
+If you enable the named client pipeline, the sample can register a named `HttpClient` (commonly `"Swish"`) that uses the SDK’s mTLS handler.
 
-$key    = [Text.Encoding]::UTF8.GetBytes($secret)
-$hmac   = [System.Security.Cryptography.HMACSHA256]::new($key)
-$sigB64 = [Convert]::ToBase64String($hmac.ComputeHash([Text.Encoding]::UTF8.GetBytes($message)))
+- Enable named client pipeline:
+  - `SWISH_USE_NAMED_CLIENT=1`
+- Provide a client certificate:
+  - `SWISH_PFX_PATH` or `SWISH_PFX_BASE64`
+  - `SWISH_PFX_PASSWORD` (or `SWISH_PFX_PASS`)
 
-$curl = "$env:SystemRoot\System32\curl.exe"
-$uri  = "http://localhost:5287/webhook/swish"
-
-& $curl -i -X POST $uri `
-  -H "Content-Type: application/json" `
-  -H "X-Swish-Timestamp: $tsIso" `
-  -H "X-Swish-Nonce: $nonce" `
-  -H "X-Swish-Signature: $sigB64" `
-  -d $bodyJson
-  ```
-
----
-### Advanced: Named HttpClient with mTLS
-
-Set `SWISH_USE_NAMED_CLIENT=1` in the example to register the named HttpClient "Swish".
-If `SWISH_PFX_PATH` or `SWISH_PFX_BASE64` and `SWISH_PFX_PASSWORD|PASS` are set, the SDK will attach a client certificate via its `MtlsHttpHandler`.
-
-- **Default/dev:** No environment variable → unchanged behavior (no mTLS).
-- **Optional:**   `SWISH_USE_NAMED_CLIENT=1` + cert variables → named pipeline with mTLS is used.
-- **Security:**    Relaxed certificate chain applies only in `DEBUG`; `Release` is strict. Never commit certificates/keys; use environment variables or `KeyVault`.
-
+🔒 **Security note:** Never commit certificates/keys. Use environment variables or a secret store.
+In the SDK, relaxed certificate chain validation is allowed only in **DEBUG** builds; **Release** should remain strict.
 
 Example (PowerShell):
+
 ```powershell
-$env:SWISH_USE_NAMED_CLIENT="1"
-$env:SWISH_PFX_PATH="C:\path\client.pfx"
-$env:SWISH_PFX_PASSWORD="secret"
-dotnet run --project .\samples\SwishSample.Web\SwishSample.Web.csproj
+$env:SWISH_USE_NAMED_CLIENT = "1"
+$env:SWISH_PFX_PATH         = "C:\path\client.pfx"
+$env:SWISH_PFX_PASSWORD     = "secret"
+
+dotnet run --project .\samples\SwishSample.Web\SwishSample.Web.csproj --urls http://localhost:5000
 ```
 
 ---
 
-### Environment selection for BaseAddress
+## Advanced: BaseAddress selection (optional)
 
-The example selects the Swish base address from environment variables:
+If configured, the sample can select the Swish base address from environment variables:
 
 1. `SWISH_BASE_URL` (absolute override, if set)
 2. `SWISH_ENV=TEST|PROD`:
@@ -185,52 +184,39 @@ The example selects the Swish base address from environment variables:
    - `SWISH_BASE_URL_PROD` when `SWISH_ENV=PROD`
 3. Fallback: `https://example.invalid`
 
-Upon startup, the example logs the selected environment and URL:
-```
-[Swish] Environment: 'TEST' | BaseAddress: https://your-test-url
-```
+Example (PowerShell):
 
-**Example (PowerShell):**
 ```powershell
-# Dev-standard (fallback)
-dotnet run --project .\samples\SwishSample.Web\SwishSample.Web.csproj
-
 # TEST
-$env:SWISH_ENV="TEST"
-$env:SWISH_BASE_URL_TEST="https://your-test-url"
-dotnet run --project .\samples\SwishSample.Web\SwishSample.Web.csproj
+$env:SWISH_ENV           = "TEST"
+$env:SWISH_BASE_URL_TEST = "https://your-test-url"
+dotnet run --project .\samples\SwishSample.Web\SwishSample.Web.csproj --urls http://localhost:5000
 
 # PROD
-$env:SWISH_ENV="PROD"
-$env:SWISH_BASE_URL_PROD="https://your-prod-url"
-dotnet run --project .\samples\SwishSample.Web\SwishSample.Web.csproj
+$env:SWISH_ENV           = "PROD"
+$env:SWISH_BASE_URL_PROD = "https://your-prod-url"
+dotnet run --project .\samples\SwishSample.Web\SwishSample.Web.csproj --urls http://localhost:5000
 
 # Absolute override
-$env:SWISH_BASE_URL="https://override.example"
-dotnet run --project .\samples\SwishSample.Web\SwishSample.Web.csproj
+$env:SWISH_BASE_URL = "https://override.example"
+dotnet run --project .\samples\SwishSample.Web\SwishSample.Web.csproj --urls http://localhost:5000
 ```
 
 ---
 
 ## Troubleshooting
 
-- Common issues and how to resolve them when running or testing the webhook locally.
-
-| Problem | Cause | Solution |
-|----------|--------|-----------|
-| `401 Unauthorized (replay-detected)` | Same nonce reused | Generate a new GUID for `$nonce` before retrying |
-| `401 Invalid signature` | Canonical string or secret mismatch | Compare your canonical message with the server log and recompute HMAC |
-| `400 Missing header` | One or more Swish headers missing | Ensure `X-Swish-Timestamp`, `X-Swish-Nonce`, and `X-Swish-Signature` are present |
-| Server won’t start | Port already in use | Stop any previous `dotnet run` instance or change the port |
+| Problem | Likely cause | Fix |
+|---|---|---|
+| `401 Unauthorized` | Canonical string mismatch, wrong secret, or body differs | Ensure canonical is exactly `"<ts>\n<nonce>\n<body>"` and sign the exact UTF-8 body bytes |
+| Replay is always rejected | You reused `$nonce` | Generate a fresh GUID for `$nonce` per request |
+| Missing headers | Required headers not sent | Send `X-Swish-Timestamp`, `X-Swish-Nonce`, `X-Swish-Signature` |
+| Server won’t start | Port already in use | Stop any previous `dotnet run` instance or change `--urls` |
 
 ---
 
 ## See also
 
-- [NordAPI.Swish SDK – Main README](../../src/NordAPI.Swish/README.md)
-- [Project repository on GitHub](https://github.com/NordAPI/NordAPI.SwishSdk)
-
----
-
-
-
+- Root README: `../../README.md`
+- Integration checklist: `../../docs/integration-checklist.md`
+- Package README: `../../src/NordAPI.Swish/README.md`

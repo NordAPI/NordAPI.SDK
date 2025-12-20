@@ -36,3 +36,12 @@ artifacts/**
 
 # Optional: dotnet user-secrets (store secrets outside repo)
 # /secrets.json
+
+# Local editor backups
+*.bak
+*.backup
+*.old
+*.tmp
+*~
+# Git temp files (Windows)
+.merge_file_*
