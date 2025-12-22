@@ -59,8 +59,8 @@ This checklist covers production-grade requirements for receiving Swish callback
 - [ ] Confirm the endpoint is reachable from Swish (public DNS + TLS).
 - [ ] Verify a valid request returns HTTP 200 and your handler processes the event.
 - [ ] Verify invalid signature returns 401/403.
-- [ ] Verify replay returns 409 (or equivalent).
-- [ ] Verify old timestamp returns 400/401/403 (choose one and keep consistent).
+- [ ] Verify replay returns a consistent failure status (commonly 401/403 or 409) and keep it consistent.
+- [ ] Verify old timestamp returns a consistent failure status (commonly 400/401/403) and keep it consistent.
 - [ ] Ensure the handler is **idempotent** (the same event may be delivered more than once).
 - [ ] Decide and document exact status codes for failures (e.g. 401/403 signature, 409 replay) and keep them consistent.
 - [ ] Verify callback retries behave as expected (Swish retries on non-200; HTTP 200 stops retries).

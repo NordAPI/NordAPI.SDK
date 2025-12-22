@@ -27,8 +27,8 @@ Optional (but recommended for confidence):
 
 ## C. Webhook verification (functional hardening)
 - [ ] Smoke test passes locally (success case).
-- [ ] Replay protection works (same nonce rejected).
-- [ ] Timestamp skew is enforced (old/new timestamps rejected).
+- [ ] Replay protection works (same nonce rejected) and returns a consistent failure status (commonly 401/403 or 409).
+- [ ] Timestamp skew is enforced (old/new timestamps rejected) and returns a consistent failure status.
 - [ ] Signature mismatch returns 401/403 (consistent behavior).
 - [ ] Handler is idempotent (duplicate callbacks do not break business logic).
 
@@ -36,7 +36,7 @@ Suggested commands (repo-specific):
 - Run sample server:
   - [ ] Set `SWISH_WEBHOOK_SECRET` (dev only) and start the sample.
 - Run smoke script:
-  - [ ] `.\scripts\smoke-webhook.ps1 ...` (verify expected 200 / 409 behaviors)
+  - [ ] `.\scripts\smoke-webhook.ps1 ...` (verify expected 200 and a consistent failure status for replay/timestamp/signature)
 
 Production guidance:
 - [ ] In-memory nonce store is not used in production.
