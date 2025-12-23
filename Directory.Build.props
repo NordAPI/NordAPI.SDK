@@ -13,45 +13,29 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>swish;payments;sdk;nordapi</PackageTags>
 
-    <!-- Generate XML documentation for NuGet and IDE intellisense -->
+    <!-- XML documentation files (IntelliSense + NuGet) -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
-    <!-- Include symbol package (snupkg) for debugging support -->
+    <!-- Symbols -->
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
 
-    <!-- README displayed on NuGet; ensure README.md is included in the package -->
+    <!-- NuGet README (file must be included in package root) -->
     <PackageReadmeFile>README.md</PackageReadmeFile>
 
-    <!-- Build quality: deterministic builds and CI-friendly flags -->
+    <!-- Build quality -->
     <Deterministic>true</Deterministic>
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
-    <!-- Warnings-as-errors is disabled for MVP to reduce friction; enable later if desired -->
+
+    <!-- MVP: keep friction low (can be tightened later) -->
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 
-    <!-- Version for this release (update for each release) -->
+    <!-- Version for this release (update per release) -->
     <Version>1.0.2</Version>
   </PropertyGroup>
 
-  <!-- Suppress missing XML comment warnings in Debug builds (helps local development) -->
-  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
-    <NoWarn>$(NoWarn);CS1591</NoWarn>
-  </PropertyGroup>
-
-  <!-- Suppress missing XML comment warnings in Release builds for MVP.
-       Consider removing this when public API documentation is complete. -->
-  <PropertyGroup Condition="'$(Configuration)'=='Release'">
-    <NoWarn>$(NoWarn);CS1591</NoWarn>
-  </PropertyGroup>
-
-  <!-- Ensure README.md is packed into the NuGet package root -->
+  <!-- Ensure README.md is packed into the NuGet package root (each project can also override) -->
   <ItemGroup>
     <None Update="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
-
-  <!-- Recommended: pin SDK target (net8.0) and optional langversion for consistency -->
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <LangVersion>preview</LangVersion>
-  </PropertyGroup>
 </Project>

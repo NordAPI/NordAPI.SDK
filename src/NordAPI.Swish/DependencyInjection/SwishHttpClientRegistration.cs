@@ -25,9 +25,24 @@ namespace NordAPI.Swish.DependencyInjection
     /// </summary>
     public static class SwishHttpClientRegistration
     {
+        /// <summary>
+        /// The canonical <see cref="HttpClient"/> name used by NordAPI.Swish.
+        /// </summary>
         public const string CanonicalClient = "NordAPI.Swish.Http";
-        public const string AliasClient     = "Swish";
 
+        /// <summary>
+        /// The alias <see cref="HttpClient"/> name used by NordAPI.Swish.
+        /// </summary>
+        public const string AliasClient = "Swish";
+
+        /// <summary>
+        /// Registers the Swish mTLS transport for outbound HTTP calls.
+        /// </summary>
+        /// <param name="services">The service collection.</param>
+        /// <param name="clientCertificate">
+        /// The client certificate used for mutual TLS (mTLS). Provide a real Swish certificate in production.
+        /// </param>
+        /// <returns>The updated <paramref name="services"/> instance.</returns>
         public static IServiceCollection AddSwishMtlsTransport(
             this IServiceCollection services,
             X509Certificate2? clientCertificate = null)
@@ -85,6 +100,3 @@ namespace NordAPI.Swish.DependencyInjection
         }
     }
 }
-
-
-

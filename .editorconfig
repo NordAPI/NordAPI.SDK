@@ -32,5 +32,4 @@ indent_style = space
 indent_size = 2
 
 [*.cs]
-dotnet_diagnostic.CS1591.severity = none
 dotnet_diagnostic.IDE0005.severity = suggestion

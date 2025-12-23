@@ -14,17 +14,14 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
-  <!-- Suppress CS1591 only in Debug to avoid dotnet watch spamming. Release remains unchanged. -->
+  <!-- Debug: do not generate XML docs to avoid noisy CS1591 during local development. -->
   <PropertyGroup Condition="'$(Configuration)'=='Debug'">
-    <NoWarn>$(NoWarn);1591</NoWarn>
-    <!-- Alternative if preferred: disable XML documentation entirely in Debug
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    -->
   </PropertyGroup>
 
-  <!-- Release: generate XML docs (IntelliSense) and keep CS1591 suppressed -->
+  <!-- Release: generate XML docs (IntelliSense) and keep CS1591 suppressed during MVP. -->
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
-    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <NoWarn>$(NoWarn);1591</NoWarn>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
