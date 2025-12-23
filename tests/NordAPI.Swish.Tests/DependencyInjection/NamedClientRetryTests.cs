@@ -5,12 +5,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Xunit;
+using NordAPI.Swish;
 using NordAPI.Swish.DependencyInjection;
+using Xunit;
 
 namespace NordAPI.Swish.Tests.DependencyInjection
 {
-    // Tests that the named HTTP client "Swish" retries on transient errors
+    // Tests that SwishClient retries on transient errors when using the named HTTP client "Swish".
     public class NamedClientRetryTests
     {
         [Fact]
@@ -22,53 +23,52 @@ namespace NordAPI.Swish.Tests.DependencyInjection
             Environment.SetEnvironmentVariable("SWISH_PFX_PASSWORD", null);
             Environment.SetEnvironmentVariable("SWISH_PFX_PASS", null);
 
-            // Set up services with logging and Swish transport pipeline
             var services = new ServiceCollection();
             services.AddLogging(config => config.AddDebug().AddConsole());
+
+            // SDK transport pipeline (rate limiting, primary preserving, etc.)
             services.AddSwishMtlsTransport();
 
-            // Prepare a handler sequence: first 500, then 200
+            // Prepare a handler sequence: first 500, then 200 with valid JSON body
             var sequenceHandler = new SequenceHandler(
                 new HttpResponseMessage(HttpStatusCode.InternalServerError) { Content = new StringContent("boom") },
-                new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("ok") }
+                new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{\"id\":\"test-id\",\"status\":\"CREATED\"}") }
             );
 
-            // Register the sequence handler as the primary HTTP handler
+            // Override the named "Swish" client to use our deterministic handler + base address
             services.AddHttpClient("Swish")
-                    .ConfigurePrimaryHttpMessageHandler(_ => sequenceHandler);
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri("http://unit.test/"))
+                .ConfigurePrimaryHttpMessageHandler(_ => sequenceHandler);
 
-            // Build provider and create the named client
             using var provider = services.BuildServiceProvider();
             var factory = provider.GetRequiredService<IHttpClientFactory>();
-            var client = factory.CreateClient("Swish");
+            var httpClient = factory.CreateClient("Swish");
+            var swish = new SwishClient(httpClient);
 
-            // Act: perform a GET request
-            var response = await client.GetAsync("http://unit.test/ping");
+            // Act: SwishClient should retry internally and then succeed
+            var result = await swish.GetPaymentStatusAsync("test-payment-id");
 
-            // Assert: request eventually succeeds and at least two attempts occurred
-            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            // Assert
+            Assert.Equal("test-id", result.Id);
+            Assert.Equal("CREATED", result.Status);
             Assert.True(sequenceHandler.Attempts >= 2, $"Expected at least 2 attempts, got {sequenceHandler.Attempts}");
         }
 
-        // A handler that returns a predefined sequence of HTTP responses
         private sealed class SequenceHandler : DelegatingHandler
         {
             private readonly HttpResponseMessage[] _responses;
             private int _currentIndex = -1;
 
-            // Number of times SendAsync has been invoked
             public int Attempts => Math.Max(0, _currentIndex + 1);
 
-            // Requires at least one response in the sequence
             public SequenceHandler(params HttpResponseMessage[] responses)
             {
-                if (responses == null || responses.Length == 0)
+                if (responses is null || responses.Length == 0)
                     throw new ArgumentException("At least one response must be provided", nameof(responses));
 
                 _responses = responses;
             }
 
-            // Returns the next response in the sequence, cloning it each time
             protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
             {
                 var index = Interlocked.Increment(ref _currentIndex);
@@ -76,7 +76,6 @@ namespace NordAPI.Swish.Tests.DependencyInjection
                 return Task.FromResult(CloneResponse(chosen));
             }
 
-            // Clone status code, headers, and textual content to avoid reuse issues
             private static HttpResponseMessage CloneResponse(HttpResponseMessage original)
             {
                 var text = original.Content?.ReadAsStringAsync().GetAwaiter().GetResult() ?? string.Empty;
@@ -85,15 +84,12 @@ namespace NordAPI.Swish.Tests.DependencyInjection
                     ReasonPhrase = original.ReasonPhrase,
                     Content = new StringContent(text)
                 };
+
                 foreach (var header in original.Headers)
-                {
                     clone.Headers.TryAddWithoutValidation(header.Key, header.Value);
-                }
+
                 return clone;
             }
         }
     }
 }
-
-
-

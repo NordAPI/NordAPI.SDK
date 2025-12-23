@@ -82,15 +82,18 @@ public sealed class SwishClient : ISwishClient
         int attempt = 0;
         Exception? lastEx = null;
 
+        // Generate Idempotency-Key once per operation (reused across all retry attempts)
+        string? idempotencyKey = isCreate ? Guid.NewGuid().ToString("N") : null;
+
         while (attempt < maxAttempts)
         {
             attempt++;
             using var request = requestFactory();
 
             // Add Idempotency-Key for create operations if not already present
-            if (isCreate && !request.Headers.Contains("Idempotency-Key"))
+            if (isCreate && idempotencyKey is not null && !request.Headers.Contains("Idempotency-Key"))
             {
-                request.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString("N"));
+                request.Headers.Add("Idempotency-Key", idempotencyKey);
             }
 
             try
