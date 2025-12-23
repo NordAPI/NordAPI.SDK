@@ -11,13 +11,12 @@ using Polly.Extensions.Http;
 namespace NordAPI.Swish.DependencyInjection
 {
     /// <summary>
-    /// Registers named HttpClient transports with mTLS support and Polly retry.
+    /// Registers named HttpClient transports with mTLS support.
     /// Names:
     /// - "NordAPI.Swish.Http" (canonical)
     /// - "Swish"             (compat alias used by tests/samples)
     ///
     /// Design:
-    /// - OUTERMOST retry (Polly) so it observes all inner handlers.
     /// - Primary is provided via a preserving filter: if tests/host set Primary we DO NOT override it;
     ///   otherwise we set an mTLS-capable Primary (env or explicit cert).
     /// - Debug: relaxed server validation ONLY when using our mTLS path.
@@ -49,16 +48,6 @@ namespace NordAPI.Swish.DependencyInjection
         {
             if (services is null) throw new ArgumentNullException(nameof(services));
 
-            // OUTERMOST retry
-            var retryPolicy = HttpPolicyExtensions
-                .HandleTransientHttpError() // 5xx, 408, HttpRequestException
-                .WaitAndRetryAsync(new[]
-                {
-                    TimeSpan.FromMilliseconds(100),
-                    TimeSpan.FromMilliseconds(200),
-                    TimeSpan.FromMilliseconds(400),
-                });
-
             // Primary factory (explicit cert wins; else env mTLS; else plain)
             Func<HttpMessageHandler> primaryFactory = () =>
             {
@@ -87,9 +76,7 @@ namespace NordAPI.Swish.DependencyInjection
                     .AddHttpMessageHandler(() =>
                         new RateLimitingHandler(
                             maxConcurrency: 4,
-                            minDelayBetweenCalls: TimeSpan.FromMilliseconds(100)))
-                    // OUTERMOST: retry (added last so it wraps everything below)
-                    .AddPolicyHandler(retryPolicy);
+                            minDelayBetweenCalls: TimeSpan.FromMilliseconds(100)));
             }
 
             Wire(CanonicalClient);
