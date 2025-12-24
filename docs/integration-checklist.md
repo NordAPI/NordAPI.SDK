@@ -32,6 +32,7 @@ Your Swish callback endpoint must verify HMAC and reject replays.
 - If you have not received a callback within your expected timeframe, use the **Retrieve** operation to fetch the status from Swish.
 
 > Note: Swish callback delivery is handled by Swish; the HMAC headers below are used by NordAPI’s verifier when you sign requests from your client/test tool.
+
 **Required headers** for NordAPI webhook verification (when using your client/test tool):
 - `X-Swish-Timestamp` — UNIX timestamp **in seconds**
 - `X-Swish-Nonce` — unique nonce (GUID/128-bit random)
