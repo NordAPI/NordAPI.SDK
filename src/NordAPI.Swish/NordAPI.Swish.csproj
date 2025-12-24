@@ -12,6 +12,9 @@
 
     <!-- NuGet README (must be located in the package root) -->
     <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <!-- NuGet package icon (must be included in the package root) -->
+    <PackageIcon>nordapi-package-icon-128.png</PackageIcon>
   </PropertyGroup>
 
   <!-- Debug: do not generate XML docs to avoid noisy CS1591 during local development. -->
@@ -43,6 +46,9 @@
     <None Update="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
+  <!-- Pack the icon into the NuGet package root -->
+  <ItemGroup>
+    <None Include="..\..\assets\nordapi-package-icon-128.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
 </Project>
-
-
