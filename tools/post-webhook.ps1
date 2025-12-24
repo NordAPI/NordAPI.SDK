@@ -20,7 +20,7 @@ if ($Timestamp -eq 0) { $Timestamp = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds(
 if (-not $Nonce -or $Nonce.Trim() -eq "") { $Nonce = [guid]::NewGuid().ToString("N") }
 
 # 3) Canonical + signature (HMAC-SHA256, Base64)
-$canonical       = "$Timestamp`n$Body"
+$canonical       = "$Timestamp`n$Nonce`n$Body"
 $secretBytes     = [Text.Encoding]::UTF8.GetBytes($Secret)
 $canonicalBytes  = [Text.Encoding]::UTF8.GetBytes($canonical)
 $hmac            = [System.Security.Cryptography.HMACSHA256]::new($secretBytes)
@@ -31,7 +31,7 @@ $signature       = [Convert]::ToBase64String($sigBytes)
 $headers = @{
   "X-Swish-Timestamp" = "$Timestamp"
   "X-Swish-Signature" = "$signature"
-  "X-Nonce"           = "$Nonce"
+  "X-Swish-Nonce"     = "$Nonce"
 }
 
 Write-Host "→ POST $Url"
