@@ -12,7 +12,7 @@ Officiellt NordAPI SDK för Swish och kommande BankID-integrationer.
 [![Build](https://github.com/NordAPI/NordAPI.SwishSdk/actions/workflows/ci.yml/badge.svg)](https://github.com/NordAPI/NordAPI.SwishSdk/actions/workflows/ci.yml)
 [![NuGet](https://img.shields.io/nuget/v/NordAPI.Swish.svg?label=NuGet)](https://www.nuget.org/packages/NordAPI.Swish)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-![.NET](https://img.shields.io/badge/.NET-7%20%7C%208-blueviolet)
+![.NET](https://img.shields.io/badge/.NET-8%2B-blueviolet)
 
 > 🇬🇧 English version: [README.md](./README.md)
 > ✅ Se även: [Integration Checklist](../../docs/integration-checklist.md)
@@ -21,7 +21,7 @@ Ett lättviktigt och säkert .NET SDK för att integrera **Swish-betalningar och
 Inkluderar inbyggd HMAC-signering, valfritt mTLS, och retry/rate limiting via `HttpClientFactory`.
 💡 *BankID SDK-stöd är planerat härnäst — håll utkik efter paketet `NordAPI.BankID`.*
 
-**Stödda .NET-versioner:** .NET 7 och 8 (LTS). Planerat: .NET 10 (LTS)-stöd.
+**Stödda .NET-versioner:** .NET 8 (LTS). Planerat: .NET 10 (LTS)-stöd.
 
 ---
 
@@ -46,7 +46,7 @@ Inkluderar inbyggd HMAC-signering, valfritt mTLS, och retry/rate limiting via `H
 ---
 
 ## Krav
-- **.NET 7 eller 8** (SDK och Runtime)
+- **.NET 8+** (SDK och Runtime)
 - Windows / macOS / Linux
 - *(Valfritt)* Redis om du vill ha distribuerat replay-skydd för webhooks
 

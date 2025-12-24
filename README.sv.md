@@ -12,7 +12,7 @@ Officiellt NordAPI SDK för Swish och kommande BankID-integrationer.
 [![Build](https://github.com/NordAPI/NordAPI.SwishSdk/actions/workflows/ci.yml/badge.svg)](https://github.com/NordAPI/NordAPI.SwishSdk/actions/workflows/ci.yml)
 [![NuGet](https://img.shields.io/nuget/v/NordAPI.Swish.svg?label=NuGet)](https://www.nuget.org/packages/NordAPI.Swish)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-![.NET](https://img.shields.io/badge/.NET-7%2B-blueviolet)
+![.NET](https://img.shields.io/badge/.NET-8%2B-blueviolet)
 
 > 🇬🇧 English version: [README.md](./README.md)
 > ✅ Se även: [Integration Checklist](./docs/integration-checklist.md)
@@ -21,7 +21,7 @@ Ett lättviktigt och säkert .NET SDK för att integrera **Swish-betalningar och
 Inkluderar inbyggt stöd för HMAC-autentisering, mTLS och hastighetsbegränsning.
 💡 *Stöd för BankID kommer härnäst — håll utkik efter paketet NordAPI.BankID.*
 
-**Kräver .NET 7+ (LTS-kompatibel)**
+**Kräver .NET 8+ (LTS-kompatibel)**
 
 ---
 

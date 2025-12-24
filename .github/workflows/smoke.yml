@@ -40,7 +40,7 @@ jobs:
           $proj = ".\samples\SwishSample.Web\SwishSample.Web.csproj"
           $log  = "$env:RUNNER_TEMP\sample-log.txt"
 
-          # Starta som separat process och få tillbaka PID
+          # Start as a separate process and capture the PID
           $psi = New-Object System.Diagnostics.ProcessStartInfo
           $psi.FileName  = "dotnet"
           $psi.Arguments = "run --project `"$proj`" --urls `"$env:FIXED_URL`""
@@ -51,7 +51,7 @@ jobs:
           $proc.StartInfo = $psi
           $null = $proc.Start()
 
-          # Streama loggar till fil asynkront
+          # Stream logs to file asynchronously
           $out = $proc.StandardOutput.ReadToEndAsync()
           $err = $proc.StandardError.ReadToEndAsync() | Out-Null
           Start-Job -Name LogDrain -ScriptBlock {
@@ -60,12 +60,12 @@ jobs:
             [IO.File]::WriteAllText($path, $content)
           } -ArgumentList $out, $log | Out-Null
 
-          # Spara utdata till GITHUB_OUTPUT (OBS: inte $PID-variabeln)
+          # Save output to GITHUB_OUTPUT (NOTE: not the $PID variable)
           "SAMPLE_PID=$($proc.Id)"    >> $env:GITHUB_OUTPUT
           "LOG=$log"                  >> $env:GITHUB_OUTPUT
           "URL=$env:FIXED_URL"        >> $env:GITHUB_OUTPUT
 
-          # Vänta tills /health svarar (timeout ~45s)
+          # Wait for /health to respond (timeout ~45s)
           $ok = $false
           for ($i=0; $i -lt 45; $i++) {
             try {
@@ -83,7 +83,7 @@ jobs:
       - name: Run smoke script (OK + replay -> 401)
         shell: pwsh
         run: |
-          # Bypass execution policy för att säkert kunna köra vårt script
+          # Bypass execution policy to safely run our script
           Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
           .\scripts\smoke-webhook.ps1 -Url "${{ steps.start_sample.outputs.URL }}/webhook/swish" -Secret "dev_secret" -Replay
 
