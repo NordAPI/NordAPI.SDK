@@ -23,7 +23,17 @@ This is a concise checklist to get a production-ready integration with the NordA
 
 Your Swish callback endpoint must verify HMAC and reject replays.
 
-**Required headers** sent by your client/test tool:
+### Official Swish callback constraints (MIG 2.6)
+
+- Callback endpoint must be **HTTPS on port 443** (TLS 1.2+) and Swish recommends **IP filtering**.
+- Swish callback does **not** support SNI — use a certificate/host setup that works without SNI.
+- If Swish cannot deliver the callback, it will **retry up to 10 times**: wait 5s, then 10s, 20s, 40s, and finally 60s between the remaining attempts.
+  Delivery stops when your endpoint returns **HTTP 200 OK** or retries are exhausted.
+- If you have not received a callback within your expected timeframe, use the **Retrieve** operation to fetch the status from Swish.
+
+> Note: Swish callback delivery is handled by Swish; the HMAC headers below are used by NordAPI’s verifier when you sign requests from your client/test tool.
+
+**Required headers** for NordAPI webhook verification (when using your client/test tool):
 - `X-Swish-Timestamp` — UNIX timestamp **in seconds**
 - `X-Swish-Nonce` — unique nonce (GUID/128-bit random)
 - `X-Swish-Signature` — `Base64(HMACSHA256(secret, canonical))`
@@ -56,6 +66,7 @@ Where:
 - [ ] **Structured logging** without PII (mask sensitive values)
 - [ ] Disable debug/dev flags in production
 - [ ] mTLS configured for Swish where applicable
+- [ ] Network edge: enforce **HTTPS:443** and allowlist Swish callback IPs where applicable (verify current IPs with Swish/bank for your environment).
 
 ---
 
