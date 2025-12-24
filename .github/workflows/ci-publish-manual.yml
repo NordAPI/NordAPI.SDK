@@ -1,12 +1,13 @@
 name: NuGet Publish (tag + gate)
 
 on:
+  workflow_dispatch:
   push:
     tags:
-      - 'v*.*.*'   # run only when a release tag is pushed (e.g. v1.2.3)
+      - 'v*.*.*' # run only when a release tag is pushed (e.g. v1.2.3)
 
 env:
-  RUN_PUBLISH: 'true'
+  RUN_PUBLISH: ${{ vars.RUN_PUBLISH || 'false' }}
 
 jobs:
   publish:
@@ -16,13 +17,19 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-      - run: dotnet restore
-      - run: dotnet pack -c Release -o out /p:ContinuousIntegrationBuild=true
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Pack
+        run: dotnet pack -c Release -o out /p:ContinuousIntegrationBuild=true
+
       - name: Push to NuGet.org
         if: ${{ env.RUN_PUBLISH == 'true' }}
         env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}  # left empty until YOU WANT to release
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }} # set only when YOU WANT to release
         run: dotnet nuget push "out/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key "$NUGET_API_KEY" --skip-duplicate
