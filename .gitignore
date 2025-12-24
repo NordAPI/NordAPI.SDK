@@ -23,10 +23,8 @@ coveragereport/
 # Local helper files used by samples/tools
 body.json
 
-# CI/pack artifacts - ignore everything but keep marker files in the folder
-artifacts/**
-!artifacts/README.md
-!artifacts/.gitkeep
+# CI/pack artifacts - generated output (do not track)
+artifacts/
 
 # Optional: NuGet packages folder (uncomment if using a local packages folder)
 # .nuget/packages/
@@ -38,6 +36,7 @@ artifacts/**
 # /secrets.json
 
 # Local editor backups
+.pages_rebuild
 *.bak
 *.backup
 *.old
