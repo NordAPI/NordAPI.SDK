@@ -10,8 +10,8 @@ env:
 
 jobs:
   publish:
-    # double-safeguard: require both a tag AND RUN_PUBLISH == 'true'
-    if: ${{ startsWith(github.ref, 'refs/tags/v') && env.RUN_PUBLISH == 'true' }}
+    # Safeguard: workflow runs on release tags, but NuGet push only happens when RUN_PUBLISH == 'true'.
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -22,6 +22,7 @@ jobs:
       - run: dotnet restore
       - run: dotnet pack -c Release -o out /p:ContinuousIntegrationBuild=true
       - name: Push to NuGet.org
+        if: ${{ env.RUN_PUBLISH == 'true' }}
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}  # left empty until YOU WANT to release
         run: dotnet nuget push "out/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key "$NUGET_API_KEY" --skip-duplicate
