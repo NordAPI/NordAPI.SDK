@@ -6,7 +6,7 @@
   [int]$Timestamp = 0
 )
 
-# 1) Hämta secret
+# 1) Resolve secret
 if (-not $Secret -or $Secret.Trim() -eq "") {
   if ($env:SWISH_WEBHOOK_SECRET) { $Secret = $env:SWISH_WEBHOOK_SECRET }
   else {
@@ -15,11 +15,11 @@ if (-not $Secret -or $Secret.Trim() -eq "") {
   }
 }
 
-# 2) Timestamp & Nonce
+# 2) Timestamp & nonce
 if ($Timestamp -eq 0) { $Timestamp = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds() }
 if (-not $Nonce -or $Nonce.Trim() -eq "") { $Nonce = [guid]::NewGuid().ToString("N") }
 
-# 3) Canonical och signatur (HMAC-SHA256, Base64)
+# 3) Canonical + signature (HMAC-SHA256, Base64)
 $canonical       = "$Timestamp`n$Body"
 $secretBytes     = [Text.Encoding]::UTF8.GetBytes($Secret)
 $canonicalBytes  = [Text.Encoding]::UTF8.GetBytes($canonical)
@@ -54,10 +54,10 @@ try {
     Write-Host "✖ $status"
     if ($text) { Write-Host $text }
     switch ($status) {
-      401 { Write-Host "Hint: Server & klient måste ha exakt samma SWISH_WEBHOOK_SECRET." }
-      409 { Write-Host "Hint: Replay-skydd – testa med ny -Nonce (eller låt skriptet generera)." }
-      400 { Write-Host "Hint: Kontrollera att headers och body skickas korrekt." }
-      500 { Write-Host "Hint: Sätt hemligheten i SERVERFÖNSTRET innan start: ``$env:SWISH_WEBHOOK_SECRET='local-webhook-secret'`` och starta om." }
+      401 { Write-Host "Hint: Server and client must use the exact same SWISH_WEBHOOK_SECRET." }
+      409 { Write-Host "Hint: Replay protection — retry with a new -Nonce (or let the script generate one)." }
+      400 { Write-Host "Hint: Verify that headers and body are sent correctly." }
+      500 { Write-Host "Hint: Set the secret in the server terminal before starting: ``$env:SWISH_WEBHOOK_SECRET='local-webhook-secret'`` and restart the app." }
     }
   } else {
     Write-Host "✖ Error: $($wex.Message)"
