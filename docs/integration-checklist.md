@@ -12,8 +12,9 @@ This is a concise checklist to get a production-ready integration with the NordA
   - `SWISH_API_KEY`
   - `SWISH_SECRET`
 - [ ] (Production) **mTLS certificate** is loaded via secure config (KeyVault/env), never from files in the repo:
-  - `SWISH_PFX_BASE64` — Base64-encoded PFX
-  - `SWISH_PFX_PASSWORD` — PFX password
+  - `SWISH_PFX_PATH` — Absolute path to client certificate (.pfx/.p12)
+  - `SWISH_PFX_PASSWORD` — PFX password (or legacy `SWISH_PFX_PASS`)
+  - Note: `SWISH_PFX_BASE64` is not used by the SDK currently.
 - [ ] Do **not** commit secrets/certificates. Keep `.gitignore` covering: `*.pfx, *.p12, *.pem, *.key, *.crt, *.cer`.
 
 ---
@@ -77,7 +78,7 @@ Where:
 ## 5) Before Go-Live
 
 - [ ] Replace all dev values (`SWISH_BASE_URL`, `SWISH_API_KEY`, `SWISH_SECRET`)
-- [ ] Install production mTLS certificate (via KeyVault/env, not files)
+- [ ] Install production mTLS certificate (via KeyVault/env; never commit certs to the repo)
 - [ ] Enable **Redis/DB** backed nonce store; clear/rotate before launch
 - [ ] Verify **HMAC** on a real/integration path, compare canonical line-by-line
 - [ ] Endpoint exposed via **HTTPS** with HSTS
