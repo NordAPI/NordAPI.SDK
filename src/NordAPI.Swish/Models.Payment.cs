@@ -3,8 +3,8 @@ namespace NordAPI.Swish;
 /// <summary>
 /// Represents a request to create a new Swish payment.
 /// </summary>
-/// <param name="PayerAlias">The payer’s Swish alias (usually a phone number starting with country code).</param>
-/// <param name="PayeeAlias">The recipient’s Swish alias or merchant ID.</param>
+/// <param name="PayerAlias">The payer's Swish alias (usually a phone number starting with country code).</param>
+/// <param name="PayeeAlias">The recipient's Swish alias or merchant ID.</param>
 /// <param name="Amount">The payment amount as a string (Swish expects a fixed decimal format).</param>
 /// <param name="Currency">The ISO currency code (e.g., "SEK").</param>
 /// <param name="Message">Optional message to include with the payment request.</param>
