@@ -112,7 +112,15 @@ public class PaymentsController : ControllerBase
   [HttpPost("pay")]
   public async Task<IActionResult> Pay()
   {
-    var create = new CreatePaymentRequest(100.00m, "SEK", "46701234567", "Test purchase");
+    var create = new CreatePaymentRequest(
+      PayerAlias: "46701234567",
+      PayeeAlias: "1231181189",
+      Amount: "100.00",
+      Currency: "SEK",
+      Message: "Test purchase",
+      CallbackUrl: "https://yourdomain.test/webhook/swish"
+    );
+
     var payment = await _swish.CreatePaymentAsync(create);
     return Ok(payment);
   }
