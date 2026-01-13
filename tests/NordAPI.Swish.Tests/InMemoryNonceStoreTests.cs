@@ -19,7 +19,7 @@ public sealed class InMemoryNonceStoreTests
 
         var start = new ManualResetEventSlim(false);
 
-        var tasks = Enumerable.Range(0, 100)
+        var tasks = Enumerable.Range(0, 500)
             .Select(_ => Task.Run(async () =>
             {
                 start.Wait();
