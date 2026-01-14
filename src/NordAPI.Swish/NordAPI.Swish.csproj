@@ -7,7 +7,6 @@
 
     <AssemblyName>NordAPI.Swish</AssemblyName>
     <PackageId>NordAPI.Swish</PackageId>
-    <Description>.NET SDK for Swish (MVP) with HMAC, rate limiting and mTLS support.</Description>
     <RepositoryType>git</RepositoryType>
 
     <!-- NuGet README (must be located in the package root) -->
