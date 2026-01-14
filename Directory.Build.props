@@ -7,6 +7,7 @@
     <!-- Repository and package URLs -->
     <RepositoryUrl>https://github.com/NordAPI/NordAPI.SwishSdk</RepositoryUrl>
     <PackageProjectUrl>https://github.com/NordAPI/NordAPI.SwishSdk</PackageProjectUrl>
+    <PackageDescription>.NET SDK for Swish payments with mTLS and webhook verification (HMAC, timestamp, nonce replay protection).</PackageDescription>
     <RepositoryType>git</RepositoryType>
 
     <!-- Licensing and package metadata -->
