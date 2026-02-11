@@ -35,11 +35,6 @@
     <PackageReference Include="System.Net.Http.Json" Version="9.0.8" />
   </ItemGroup>
 
-  <!-- IMPORTANT: Use Update (not Include) and ensure it's packed in the package root -->
-  <ItemGroup>
-    <None Update="README.md" Pack="true" PackagePath="\" />
-  </ItemGroup>
-
   <!-- Pack the icon into the NuGet package root -->
   <ItemGroup>
     <None Include="..\..\assets\nordapi-package-icon-128.png" Pack="true" PackagePath="\" />

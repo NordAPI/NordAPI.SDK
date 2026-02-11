@@ -37,6 +37,8 @@
 
   <!-- Ensure README.md is packed into the NuGet package root (each project can also override) -->
   <ItemGroup>
-    <None Update="README.md" Pack="true" PackagePath="\" />
+    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\" />
+    <None Include="$(MSBuildThisFileDirectory)LICENSE" Pack="true" PackagePath="\" />
   </ItemGroup>
+
 </Project>
