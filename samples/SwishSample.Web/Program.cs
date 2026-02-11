@@ -3,7 +3,6 @@ using System.IO;
 using System.Text;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Primitives;
 using NordAPI.Swish;
 using NordAPI.Swish.DependencyInjection;
 using NordAPI.Swish.Webhooks;
@@ -44,14 +43,18 @@ else
 // Swish SDK client (ENV-driven base URL + HMAC). mTLS is set inside the SDK.
 // -------------------------------------------------------------
 var envName = Environment.GetEnvironmentVariable("SWISH_ENV") ?? "";
-var baseUrl =
-    Environment.GetEnvironmentVariable("SWISH_BASE_URL") ??
-    (string.Equals(envName, "TEST", StringComparison.OrdinalIgnoreCase)
-        ? Environment.GetEnvironmentVariable("SWISH_BASE_URL_TEST")
-        : string.Equals(envName, "PROD", StringComparison.OrdinalIgnoreCase)
-            ? Environment.GetEnvironmentVariable("SWISH_BASE_URL_PROD")
-            : null) ??
-    "https://example.invalid";
+
+var baseUrl = Environment.GetEnvironmentVariable("SWISH_BASE_URL");
+if (string.IsNullOrWhiteSpace(baseUrl))
+{
+    if (string.Equals(envName, "TEST", StringComparison.OrdinalIgnoreCase))
+        baseUrl = Environment.GetEnvironmentVariable("SWISH_BASE_URL_TEST");
+    else if (string.Equals(envName, "PROD", StringComparison.OrdinalIgnoreCase))
+        baseUrl = Environment.GetEnvironmentVariable("SWISH_BASE_URL_PROD");
+}
+
+baseUrl ??= "https://example.invalid";
+
 
 Console.WriteLine($"[Swish] Env='{envName?.ToUpperInvariant()}', BaseAddress={baseUrl}");
 
@@ -117,19 +120,23 @@ app.MapPost("/webhook/swish", async (
         rawBody = (await reader.ReadToEndAsync()) ?? string.Empty;
     req.Body.Position = 0;
 
-    // 3) Pick headers (aliases are handled in the verifier)
-    var tsHeader  = ValueOr(req.Headers["X-Swish-Timestamp"], req.Headers["X-Timestamp"]);
-    var sigHeader = ValueOr(req.Headers["X-Swish-Signature"], req.Headers["X-Signature"]);
-    var nonce     = ValueOr(req.Headers["X-Swish-Nonce"],      req.Headers["X-Nonce"]);
+    // 3) Pick STRICT headers (no aliases in the sample)
+    var tsHeader = req.Headers["X-Swish-Timestamp"].ToString();
+    var sigHeader = req.Headers["X-Swish-Signature"].ToString();
+    var nonce = req.Headers["X-Swish-Nonce"].ToString();
 
-    if (string.IsNullOrWhiteSpace(tsHeader) || string.IsNullOrWhiteSpace(sigHeader))
-        return Results.BadRequest(new { reason = "missing-headers" });
+    if (string.IsNullOrWhiteSpace(tsHeader) ||
+        string.IsNullOrWhiteSpace(sigHeader) ||
+        string.IsNullOrWhiteSpace(nonce))
+    {
+        return Results.BadRequest(new { reason = "missing-required-headers" });
+    }
 
     var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
     {
         ["X-Swish-Timestamp"] = tsHeader,
         ["X-Swish-Signature"] = sigHeader,
-        ["X-Swish-Nonce"]     = nonce ?? string.Empty
+        ["X-Swish-Nonce"] = nonce
     };
 
     // 4) Verify
@@ -139,21 +146,15 @@ app.MapPost("/webhook/swish", async (
     if (!result.Success)
     {
         log.LogWarning("Webhook verification failed. Reason='{Reason}', Nonce='{Nonce}'",
-            result.Reason ?? "sig-or-replay-failed", nonce ?? "(none)");
+            result.Reason ?? "sig-or-replay-failed", nonce);
         return Results.Json(new { reason = result.Reason ?? "sig-or-replay-failed" }, statusCode: 401);
     }
 
-    log.LogInformation("Webhook accepted. Nonce='{Nonce}'", nonce ?? "(none)");
+    log.LogInformation("Webhook accepted. Nonce='{Nonce}'", nonce);
     return Results.Ok(new { received = true });
 });
 
 app.Run();
-
-// -------------------------------------------------------------
-// Helpers
-// -------------------------------------------------------------
-static string ValueOr(StringValues a, StringValues b)
-    => string.IsNullOrWhiteSpace(a) ? b.ToString() : a.ToString();
 
 // Expose Program for tests
 public partial class Program { }
