@@ -156,8 +156,8 @@ If you enable the named client pipeline, the sample can register a named `HttpCl
 - Enable named client pipeline:
   - `SWISH_USE_NAMED_CLIENT=1`
 - Provide a client certificate:
-  - `SWISH_PFX_PATH` or `SWISH_PFX_BASE64`
-  - `SWISH_PFX_PASSWORD` (or `SWISH_PFX_PASS`)
+  - `SWISH_PFX_PATH`
+  - `SWISH_PFX_PASSWORD`
 
 🔒 **Security note:** Never commit certificates/keys. Use environment variables or a secret store.
 In the SDK, relaxed certificate chain validation is allowed only in **DEBUG** builds; **Release** should remain strict.

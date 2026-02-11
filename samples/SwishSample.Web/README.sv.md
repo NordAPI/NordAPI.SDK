@@ -156,8 +156,8 @@ Om du aktiverar named client-pipelinen kan samplet registrera en named `HttpClie
 - Aktivera named client pipeline:
   - `SWISH_USE_NAMED_CLIENT=1`
 - Ange klientcertifikat:
-  - `SWISH_PFX_PATH` eller `SWISH_PFX_BASE64`
-  - `SWISH_PFX_PASSWORD` (eller `SWISH_PFX_PASS`)
+  - `SWISH_PFX_PATH`
+  - `SWISH_PFX_PASSWORD`
 
 **Säkerhetsnotis:** Commita aldrig certifikat/nycklar. Använd env vars eller en secret store.
 I SDK:n tillåts relaxed chain endast i **DEBUG**; i **Release** ska validering vara strikt.
