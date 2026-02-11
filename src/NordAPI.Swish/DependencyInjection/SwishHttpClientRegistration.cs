@@ -54,7 +54,12 @@ namespace NordAPI.Swish.DependencyInjection
                     var h = new SocketsHttpHandler();
                     h.SslOptions.ClientCertificates = new X509CertificateCollection { clientCertificate };
 #if DEBUG
+// Dev-only: allow invalid server certs for local testing. Never compiled into Release.
+// Sonar: S4830 is suppressed here intentionally.
+#pragma warning disable S4830
                     h.SslOptions.RemoteCertificateValidationCallback = static (_, _, _, _) => true;
+#pragma warning restore S4830
+
 #endif
                     return h;
                 }
