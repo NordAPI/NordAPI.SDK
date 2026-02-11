@@ -7,10 +7,6 @@
 
     <AssemblyName>NordAPI.Swish</AssemblyName>
     <PackageId>NordAPI.Swish</PackageId>
-    <RepositoryType>git</RepositoryType>
-
-    <!-- NuGet README (must be located in the package root) -->
-    <PackageReadmeFile>README.md</PackageReadmeFile>
 
     <!-- NuGet package icon (must be included in the package root) -->
     <PackageIcon>nordapi-package-icon-128.png</PackageIcon>
