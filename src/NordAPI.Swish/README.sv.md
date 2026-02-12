@@ -18,7 +18,7 @@ Officiellt NordAPI SDK för Swish och kommande BankID-integrationer.
 > ✅ Se även: [Integration Checklist](../../docs/integration-checklist.md)
 
 Ett lättviktigt och säkert .NET SDK för att integrera **Swish-betalningar och återköp**, med fokus på säkra test- och utvecklingsflöden.
-Inkluderar inbyggd HMAC-signering, valfritt mTLS, och retry/rate limiting via `HttpClientFactory`.
+Inkluderar inbyggd HMAC-signering, valfritt mTLS, samt intern retry/backoff för transienta fel.
 💡 *BankID SDK-stöd är planerat härnäst — håll utkik efter paketet `NordAPI.BankID`.*
 
 **Stödda .NET-versioner:** .NET 8 (LTS). Planerat: .NET 10 (LTS)-stöd.
@@ -378,22 +378,26 @@ public sealed record CreateRefundResponse(
 
 ## Felscenarier & Retry-policy
 
-SDK:t registrerar en namngiven `HttpClient` **"Swish"** med:
-- **Timeout:** 30 sekunder
-- **Retry:** upp till 3 försök (exponentiell backoff + jitter) på `408`, `429`, `5xx`, `HttpRequestException`, `TaskCanceledException` (timeout).
+SDK:t gör retry internt i `SwishClient`.
 
-Aktivera/utöka:
-```csharp
-services.AddSwishHttpClient(); // registrerar "Swish" (timeout + retry + mTLS om env-vars finns)
-services.AddHttpClient("Swish")
-        .AddHttpMessageHandler(_ => new MyCustomHandler()); // utanför SDK:s retry-pipeline
-```
+- **Timeout:** 30 sekunder (HttpClient timeout som standard)
+- **Retry:** upp till 3 försök med exponentiell backoff + jitter på:
+  - `408`
+  - `429`
+  - `5xx`
+  - `HttpRequestException`
+  - `TaskCanceledException` (timeout)
+
+Retry är deterministisk och gäller per operation.
+Idempotency-Key genereras en gång per operation och återanvänds för alla retry-försök.
+
+Om du registrerar en egen `HttpClient`, se till att du inte lägger till ett extra retry-lager om det inte är avsiktligt.
 
 Vanliga svar:
 - **400 Bad Request** → valideringsfel (kontrollera obligatoriska fält).
 - **401 Unauthorized** → ogiltig `SWISH_API_KEY`/`SWISH_SECRET` eller saknade headers.
-- **429 Too Many Requests** → följ retry-policy/backoff.
-- **5xx** → transient; auto-retry triggas av pipelinen.
+- **429 Too Many Requests** → hanteras av den interna retry-mekanismen.
+- **5xx** → transient; hanteras av den interna retry-mekanismen.
 
 ---
 
