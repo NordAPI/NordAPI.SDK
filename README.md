@@ -55,7 +55,7 @@ Includes built-in support for HMAC authentication, mTLS, and rate limiting.
 
 With this SDK you get a working Swish client in just minutes:
 
-- **HttpClientFactory** with retry and rate limiting
+- **HttpClientFactory** for configuring the HTTP pipeline (HMAC, rate limiting, mTLS)
 - **Built-in HMAC signing**
 - **mTLS (optional)** via environment variables — strict chain in Release; relaxed only in Debug
 - **Webhook verification** with replay protection (nonce-store)
@@ -323,18 +323,18 @@ The SDK provides an **opt-in** named `HttpClient` **"Swish"** with:
 
 **Enable:**
 ```csharp
-services.AddSwishHttpClient(); // registers "Swish" (timeout + retry + mTLS if env vars exist)
+services.AddSwishHttpClient(); // registers "Swish" (HTTP pipeline + mTLS if env vars exist)
 ```
 
 **Extend or override:**
 ```csharp
 services.AddSwishHttpClient();
 services.AddHttpClient("Swish")
-        .AddHttpMessageHandler(_ => new MyCustomHandler()); // runs outside SDK's retry pipeline
+        .AddHttpMessageHandler(_ => new MyCustomHandler()); // runs outside the SDK's HTTP pipeline
 ```
 
 **Disable:**
-- Do not call `AddSwishHttpClient()` (the default pipeline will be used — no retry/timeout).
+- Do not call `AddSwishHttpClient()` unless you want to customize the SDK's HTTP pipeline.
 - Or re-register `"Swish"` manually to replace handlers or settings.
 
 ---
