@@ -18,7 +18,7 @@ Official NordAPI SDK for Swish and upcoming BankID integrations.
 > ✅ See also: [Integration Checklist](../../docs/integration-checklist.md)
 
 A lightweight and secure .NET SDK for integrating **Swish payments and refunds**, with a focus on safe test and development workflows.
-Includes built-in HMAC signing, optional mTLS, and retry/rate limiting via `HttpClientFactory`.
+Includes built-in HMAC signing, optional mTLS, and an internal retry/backoff mechanism for transient errors.
 💡 *BankID SDK support is planned next — stay tuned for the `NordAPI.BankID` package.*
 
 **Supported .NET versions:** .NET 8 (LTS). Planned: .NET 10 (LTS) support.
@@ -379,22 +379,26 @@ public sealed record CreateRefundResponse(
 
 ## Error Scenarios & Retry Policy
 
-The SDK registers a named `HttpClient` **"Swish"** with:
-- **Timeout:** 30 seconds
-- **Retry:** up to 3 attempts (exponential backoff + jitter) on `408`, `429`, `5xx`, `HttpRequestException`, `TaskCanceledException` (timeout).
+The SDK performs retry internally inside `SwishClient`.
 
-Enable/extend:
-```csharp
-services.AddSwishHttpClient(); // registers "Swish" (timeout + retry + mTLS if env vars exist)
-services.AddHttpClient("Swish")
-        .AddHttpMessageHandler(_ => new MyCustomHandler()); // outside SDK retry-pipeline
-```
+- **Timeout:** 30 seconds (default HttpClient timeout)
+- **Retry:** up to 3 attempts with exponential backoff + jitter on:
+  - `408`
+  - `429`
+  - `5xx`
+  - `HttpRequestException`
+  - `TaskCanceledException` (timeout)
+
+Retry is deterministic and scoped per operation.
+The Idempotency-Key is generated once per operation and reused across all retry attempts.
+
+If you register your own `HttpClient`, ensure you do not introduce an additional retry layer unless explicitly intended.
 
 Common responses:
 - **400 Bad Request** → validation error (check required fields).
 - **401 Unauthorized** → invalid `SWISH_API_KEY`/`SWISH_SECRET` or missing headers.
-- **429 Too Many Requests** → follow retry policy/backoff.
-- **5xx** → transient; retry automatically triggered by pipeline.
+- **429 Too Many Requests** → handled by the internal retry mechanism.
+- **5xx** → transient; handled by the internal retry mechanism.
 
 ---
 
