@@ -14,8 +14,8 @@ Officiellt NordAPI SDK för Swish och kommande BankID-integrationer.
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 ![.NET](https://img.shields.io/badge/.NET-8%2B-blueviolet)
 
-> 🇬🇧 English version: [README.md](./README.md)
-> ✅ Se även: [Integration Checklist](../../docs/integration-checklist.md)
+> 🇬🇧 English version: [README.md](https://github.com/NordAPI/NordAPI.SwishSdk/blob/main/src/NordAPI.Swish/README.md)
+> ✅ Se även: [Integration Checklist](https://nordapi.net/integration-checklist/)
 
 Ett lättviktigt och säkert .NET SDK för att integrera **Swish-betalningar och återköp**, med fokus på säkra test- och utvecklingsflöden.
 Inkluderar inbyggd HMAC-signering, valfritt mTLS, samt intern retry/backoff för transienta fel.

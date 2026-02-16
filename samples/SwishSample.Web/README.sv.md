@@ -103,7 +103,7 @@ $canonical = "{0}`n{1}`n{2}" -f $ts, $nonce, $bodyJson
 $key    = [Text.Encoding]::UTF8.GetBytes($secret)
 $hmac   = [System.Security.Cryptography.HMACSHA256]::new($key)
 $sigB64 = [Convert]::ToBase64String(
-  $hmac.ComputeHash([Text.Encoding]::UTF8.GetBytes($canonical))
+$hmac.ComputeHash([Text.Encoding]::UTF8.GetBytes($canonical))
 )
 ```
 
@@ -218,5 +218,5 @@ dotnet run --project .\samples\SwishSample.Web\SwishSample.Web.csproj --urls htt
 ## Se även
 
 - Root README: `../../README.md`
-- Integration checklist: `../../docs/integration-checklist.md`
+- Integration checklist: https://nordapi.net/integration-checklist/
 - Paket-README: `../../src/NordAPI.Swish/README.md`
