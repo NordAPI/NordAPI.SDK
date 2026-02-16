@@ -24,7 +24,13 @@ public sealed class SwishWebhookVerifier
 
     private readonly SwishWebhookVerifierOptions _opt;
     private readonly ISwishNonceStore _nonceStore;
-
+    /// <summary>
+    /// Creates a verifier for incoming Swish webhook requests.
+    /// </summary>
+    /// <param name="options">Verifier options (shared secret, header names, timestamp tolerances).</param>
+    /// <param name="nonceStore">Nonce store used for replay protection.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> or <paramref name="nonceStore"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <see cref="SwishWebhookVerifierOptions.SharedSecret"/> is not configured.</exception>
     public SwishWebhookVerifier(SwishWebhookVerifierOptions options, ISwishNonceStore nonceStore)
     {
         _opt = options ?? throw new ArgumentNullException(nameof(options));
@@ -33,7 +39,13 @@ public sealed class SwishWebhookVerifier
         if (string.IsNullOrWhiteSpace(_opt.SharedSecret))
             throw new ArgumentException("SharedSecret must be configured.", nameof(options));
     }
-
+    /// <summary>
+    /// Verifies an incoming webhook using HMAC signature, timestamp validation, and nonce replay protection.
+    /// </summary>
+    /// <param name="body">Raw request body (byte-for-byte as received).</param>
+    /// <param name="headers">Request headers.</param>
+    /// <param name="nowUtc">Current UTC time used for deterministic validation.</param>
+    /// <returns>The verification result.</returns>
     public VerifyResult Verify(string body, IReadOnlyDictionary<string, string> headers, DateTimeOffset nowUtc)
     {
         // 1) Signature
@@ -152,10 +164,24 @@ public sealed class SwishWebhookVerifier
 
         return diff == 0;
     }
-
+    /// <summary>
+    /// Result of a webhook verification attempt.
+    /// </summary>
+    /// <param name="Success">Indicates whether the verification was successful.</param>
+    /// <param name="Reason">If verification failed, contains a deterministic reason for the failure.</param>
     public readonly record struct VerifyResult(bool Success, string? Reason)
     {
+        /// <summary>
+        /// Creates a successful verification result.
+        /// </summary>
+        /// <returns>A successful <see cref="VerifyResult"/>.</returns>
         public static VerifyResult Ok() => new(true, null);
+
+        /// <summary>
+        /// Creates a failed verification result with a deterministic reason.
+        /// </summary>
+        /// <param name="reason">The failure reason constant.</param>
+        /// <returns>A failed <see cref="VerifyResult"/>.</returns>
         public static VerifyResult Fail(string reason) => new(false, reason);
     }
 }
