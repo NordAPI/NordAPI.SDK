@@ -107,11 +107,12 @@ public sealed class SwishTransientException : SwishException
 /// </summary>
 public sealed class SwishConfigurationException : SwishException
 {
+    /// <summary>Creates a new SwishConfigurationException.</summary>
     public SwishConfigurationException(string message)
         : base(message)
     {
     }
-
+    /// <summary>Creates a new SwishConfigurationException with an inner exception.</summary>
     public SwishConfigurationException(string message, Exception innerException)
         : base(message, null, null, innerException)
     {
