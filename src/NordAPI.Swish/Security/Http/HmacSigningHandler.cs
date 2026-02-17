@@ -6,8 +6,8 @@ using NordAPI.Swish.Internal;
 namespace NordAPI.Swish.Security.Http;
 
 /// <summary>
-/// DelegatingHandler that applies HMAC signature + timestamp + nonce for each request.
-/// Canonical: METHOD\nPATH?QUERY\nTIMESTAMP\nNONCE\nBODY
+/// Optional NordAPI Security Hardening: applies HMAC signature + timestamp + nonce.
+/// Not required by official Swish spec. Useful for internal validation or proxies.
 /// </summary>
 internal sealed class HmacSigningHandler : DelegatingHandler
 {

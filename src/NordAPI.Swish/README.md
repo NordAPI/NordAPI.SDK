@@ -18,7 +18,7 @@ Official NordAPI SDK for Swish and upcoming BankID integrations.
 > ✅ See also: [Integration Checklist](https://nordapi.net/integration-checklist/)
 
 A lightweight and secure .NET SDK for integrating **Swish payments and refunds**, with a focus on safe test and development workflows.
-Includes built-in HMAC signing, optional mTLS, and an internal retry/backoff mechanism for transient errors.
+Includes enforced-by-default mTLS, an optional NordAPI HMAC signing hardening layer, and an internal retry/backoff mechanism for transient errors.
 💡 *BankID SDK support is planned next — stay tuned for the `NordAPI.BankID` package.*
 
 **Supported .NET versions:** .NET 8 (LTS). Planned: .NET 10 (LTS) support.
@@ -32,7 +32,7 @@ Includes built-in HMAC signing, optional mTLS, and an internal retry/backoff mec
 - [Usage Example: Creating a Payment](#usage-example-creating-a-payment)
 - [Typical Swish Flow (high-level)](#typical-swish-flow-high-level)
 - [Configuration — Environment Variables & User-Secrets](#configuration--environment-variables--user-secrets)
-- [mTLS (optional)](#mtls-optional)
+- [mTLS (enforced by default)](#mtls-enforced-by-default)
 - [Running Samples and Tests](#running-samples-and-tests)
 - [Webhook Smoke Test](#webhook-smoke-test)
 - [API Overview (Signatures & Models)](#api-overview-signatures--models)
@@ -225,7 +225,7 @@ dotnet user-secrets set "SWISH_BASE_URL" "https://example.invalid"
 
 ---
 
-## mTLS (optional)
+## mTLS (enforced by default)
 
 Enable client certificate (PFX):
 ```powershell
@@ -234,9 +234,11 @@ $env:SWISH_PFX_PASSWORD = "secret-password"
 ```
 
 **Behavior**
-- No certificate → fallback without mTLS.
+- By default, the SDK requires mTLS.
+- If `RequireMtls = true` (default) and the certificate is missing, the SDK throws `SwishConfigurationException` when the HTTP handler is created.
+- Set `RequireMtls = false` only for controlled local testing/mock environments where mTLS is intentionally not used.
 - **Debug:** relaxed server certificate validation (local only).
-- **Release:** strict certificate chain (no “allow invalid chain”).
+- **Release:** strict certificate chain (no "allow invalid chain").
 
 ---
 
@@ -435,7 +437,7 @@ dotnet add package NordAPI.Swish --version 1.2.3
 ## FAQ
 **401 in tests** — Check `SWISH_API_KEY`/`SWISH_SECRET` and ensure your clock is synchronized.
 **Replay always denied** — Change `nonce` between calls and clear in-memory/Redis. Check `SWISH_REDIS`.
-**mTLS error in production** — Validate `SWISH_PFX_PATH` + `SWISH_PFX_PASSWORD` and the certificate chain.
+**mTLS error in production** — Validate `SWISH_PFX_PATH` + `SWISH_PFX_PASSWORD` (or legacy `SWISH_PFX_PASS`) and the certificate chain. If `RequireMtls = true` (default) and no certificate can be resolved, the SDK throws `SwishConfigurationException`.
 
 ---
 
@@ -445,4 +447,4 @@ MIT License. Security contact: `security@nordapi.com`.
 
 ---
 
-_Last updated: November 2025_
+_Last updated: February 2026_

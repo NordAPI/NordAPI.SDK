@@ -28,7 +28,7 @@ Inkluderar inbyggt stöd för HMAC-autentisering, mTLS och hastighetsbegränsnin
 ## 📚 Innehållsförteckning
 - [🚀 Funktioner](#-funktioner)
 - [⚡ Snabbstart (ASP.NET Core)](#-snabbstart-aspnet-core)
-- [🔐 mTLS via miljövariabler](#-mtls-via-miljövariabler-valfritt)
+- [🔐 mTLS via miljövariabler (krävs som standard)](#-mtls-via-miljövariabler-krävs-som-standard)
 - [🧪 Starta & röktesta](#-starta--röktesta)
 - [🌐 Vanliga miljövariabler](#-vanliga-miljövariabler)
 - [🧰 Felsökning](#-felsökning)
@@ -57,9 +57,10 @@ Inkluderar inbyggt stöd för HMAC-autentisering, mTLS och hastighetsbegränsnin
 Med detta SDK får du en fungerande Swish-klient på bara några minuter:
 
 - **HttpClientFactory** för att konfigurera HTTP-pipelinen (HMAC, rate limiting, mTLS)
-- **Inbyggd HMAC-signering**
-- **mTLS (valfritt)** via miljövariabler — strikt kedja i Release; avslappnad endast i Debug
+- **Valfri NordAPI Security Hardening (HMAC-signering)** för utgående requests (inte Swish-officiellt)
+- **mTLS (krävs som standard)** via miljövariabler — strikt kedja i Release; avslappnad endast i Debug (lokalt)
 - **Webhook-verifiering** med replay-skydd (nonce-store)
+- **Intern retry/backoff** för transienta fel (endast ett retry-lager; Idempotency-Key återanvänds per operation)
 
 ### 1) Installera / referera
 ```powershell
@@ -130,15 +131,18 @@ public class PaymentsController : ControllerBase
 
 ---
 
-## 🔐 mTLS via miljövariabler (valfritt)
+## 🔐 mTLS via miljövariabler (krävs som standard)
 
-Aktivera mutual TLS med klientcertifikat (PFX):
+Aktivera mTLS med klientcertifikat (PFX):
 
 - `SWISH_PFX_PATH` — sökväg till `.pfx`
 - `SWISH_PFX_PASSWORD` — lösenord till certifikatet
+- legacy fallback: `SWISH_PFX_PASS` (om `SWISH_PFX_PASSWORD` inte är satt)
 
 **Beteende:**
-- Inget certifikat → fallback utan mTLS.
+- Som standard kräver SDK:t mTLS.
+- Om `RequireMtls = true` (standard) och inget klientcertifikat kan hittas, kastar SDK:t `SwishConfigurationException` när HTTP-handlern skapas.
+- Sätt `RequireMtls = false` endast för kontrollerad lokal testning/mock där mTLS medvetet inte används.
 - **Debug:** avslappnad servercert-validering (endast lokalt).
 - **Release:** strikt certkedja (ingen "allow invalid chain").
 
@@ -365,4 +369,4 @@ Detta projekt är licensierat under **MIT-licensen**.
 
 ---
 
-_Senast uppdaterad: November 2025_
+_Senast uppdaterad: Februari 2026_

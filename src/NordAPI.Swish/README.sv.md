@@ -18,7 +18,8 @@ Officiellt NordAPI SDK för Swish och kommande BankID-integrationer.
 > ✅ Se även: [Integration Checklist](https://nordapi.net/integration-checklist/)
 
 Ett lättviktigt och säkert .NET SDK för att integrera **Swish-betalningar och återköp**, med fokus på säkra test- och utvecklingsflöden.
-Inkluderar inbyggd HMAC-signering, valfritt mTLS, samt intern retry/backoff för transienta fel.
+Inkluderar en **valfri NordAPI hardening-layer** (HMAC-signering) och en **intern retry/backoff-mekanism** för transienta fel.
+mTLS **krävs som standard** (fail-closed) och kan endast stängas av explicit via `RequireMtls = false` för kontrollerade test/mock-miljöer.
 💡 *BankID SDK-stöd är planerat härnäst — håll utkik efter paketet `NordAPI.BankID`.*
 
 **Stödda .NET-versioner:** .NET 8 (LTS). Planerat: .NET 10 (LTS)-stöd.
@@ -32,7 +33,7 @@ Inkluderar inbyggd HMAC-signering, valfritt mTLS, samt intern retry/backoff för
 - [Exempel på användning: Skapa en betalning](#exempel-på-användning-skapa-en-betalning)
 - [Typiskt Swish-flöde (översikt)](#typiskt-swish-flöde-översikt)
 - [Konfiguration — Miljövariabler & User-Secrets](#konfiguration--miljövariabler--user-secrets)
-- [mTLS (valfritt)](#mtls-valfritt)
+- [mTLS (krävs som standard)](#mtls-krävs-som-standard)
 - [Köra samples och tester](#köra-samples-och-tester)
 - [Webhook-röktest](#webhook-röktest)
 - [API-översikt (Signaturer & Modeller)](#api-översikt-signaturer--modeller)
@@ -224,7 +225,7 @@ dotnet user-secrets set "SWISH_BASE_URL" "https://example.invalid"
 
 ---
 
-## mTLS (valfritt)
+## mTLS (krävs som standard)
 
 Aktivera klientcertifikat (PFX):
 ```powershell
@@ -233,9 +234,11 @@ $env:SWISH_PFX_PASSWORD = "hemligt-lösenord"
 ```
 
 **Beteende**
-- Inget certifikat → fallback utan mTLS.
+- Som standard kräver SDK:t mTLS.
+- Om `RequireMtls = true` (standard) och certifikat saknas kastar SDK:t `SwishConfigurationException` när HTTP-handlern skapas.
+- Sätt `RequireMtls = false` endast för kontrollerad lokal testning/mock där mTLS medvetet inte används.
 - **Debug:** avslappnad servercertifikatvalidering (endast lokalt).
-- **Release:** strikt certkedja (ingen ”allow invalid chain”).
+- **Release:** strikt certkedja (ingen "allow invalid chain").
 
 ---
 
@@ -434,7 +437,7 @@ dotnet add package NordAPI.Swish --version 1.2.3
 ## FAQ
 **401 i tester** — Kontrollera `SWISH_API_KEY`/`SWISH_SECRET` och att din klocka är synkad.
 **Replay nekas alltid** — Byt `nonce` mellan anrop och rensa in-memory/Redis. Kontrollera `SWISH_REDIS`.
-**mTLS-fel i produktion** — Verifiera `SWISH_PFX_PATH` + `SWISH_PFX_PASSWORD` och certifikatkedjan.
+- **mTLS-fel i produktion** — Verifiera `SWISH_PFX_PATH` + `SWISH_PFX_PASSWORD` (eller legacy `SWISH_PFX_PASS`) och certifikatkedjan. Om `RequireMtls = true` (standard) och inget certifikat kan hittas kastar SDK:t `SwishConfigurationException`.
 
 ---
 
@@ -444,4 +447,4 @@ MIT-licens. Säkerhetskontakt: `security@nordapi.com`.
 
 ---
 
-_Senast uppdaterad: November 2025_
+_Senast uppdaterad: Februari 2026_

@@ -27,7 +27,7 @@ Includes built-in support for HMAC authentication, mTLS, and rate limiting.
 ## 📚 Table of Contents
 - [🚀 Features](#-features)
 - [⚡ Quick start (ASP.NET Core)](#-quick-start-aspnet-core)
-- [🔐 mTLS via environment variables](#-mtls-via-environment-variables-optional)
+- [🔐 mTLS via environment variables](#-mtls-via-environment-variables-enforced-by-default)
 - [🧪 Run & smoke test](#-run--smoke-test)
 - [🌐 Common environment variables](#-common-environment-variables)
 - [🧰 Troubleshooting](#-troubleshooting)
@@ -56,9 +56,11 @@ Includes built-in support for HMAC authentication, mTLS, and rate limiting.
 With this SDK you get a working Swish client in just minutes:
 
 - **HttpClientFactory** for configuring the HTTP pipeline (HMAC, rate limiting, mTLS)
-- **Built-in HMAC signing**
-- **mTLS (optional)** via environment variables — strict chain in Release; relaxed only in Debug
+- **Optional NordAPI Security Hardening (HMAC signing)** for outbound requests (not Swish-official)
+- **mTLS (enforced by default)** via environment variables — strict chain in Release; relaxed only in Debug (local)
 - **Webhook verification** with replay protection (nonce-store)
+- **Internal retry/backoff** for transient errors (single retry layer; Idempotency-Key reused per operation)
+
 
 ### 1) Install / reference
 ```powershell
@@ -129,15 +131,18 @@ public class PaymentsController : ControllerBase
 
 ---
 
-## 🔐 mTLS via environment variables (optional)
+## 🔐 mTLS via environment variables (enforced by default)
 
 Enable mutual TLS with a client certificate (PFX):
 
 - `SWISH_PFX_PATH` — path to `.pfx`
 - `SWISH_PFX_PASSWORD` — password for the certificate
+- legacy fallback: `SWISH_PFX_PASS` (if `SWISH_PFX_PASSWORD` is not set)
 
 **Behavior:**
-- No certificate → falls back to non-mTLS.
+- By default, the SDK requires a client certificate (mTLS).
+- If `RequireMtls = true` (default) and no client certificate can be resolved, the SDK throws `SwishConfigurationException` when the HTTP handler is created.
+- Set `RequireMtls = false` only for controlled local testing/mock environments where mTLS is intentionally not used.
 - **Debug:** relaxed server certificate validation (local only).
 - **Release:** strict chain (no "allow invalid chain").
 
@@ -359,5 +364,5 @@ This project is licensed under the **MIT License**.
 
 ---
 
-_Last updated: November 2025_
+_Last updated: February 2026_
 

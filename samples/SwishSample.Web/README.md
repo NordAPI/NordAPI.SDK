@@ -158,6 +158,7 @@ If you enable the named client pipeline, the sample can register a named `HttpCl
 - Provide a client certificate:
   - `SWISH_PFX_PATH`
   - `SWISH_PFX_PASSWORD`
+  - Note: By default, the SDK requires mTLS unless you set `RequireMtls = false` in `SwishOptions` (test/mock only).
 
 🔒 **Security note:** Never commit certificates/keys. Use environment variables or a secret store.
 In the SDK, relaxed certificate chain validation is allowed only in **DEBUG** builds; **Release** should remain strict.
