@@ -1,5 +1,5 @@
+using System;
 using System.Net;
-using System.Net.Http;
 
 namespace NordAPI.Swish.Errors;
 
@@ -101,3 +101,20 @@ public sealed class SwishTransientException : SwishException
     {
     }
 }
+
+/// <summary>
+/// Thrown when the Swish SDK is misconfigured (e.g., missing required mTLS certificate).
+/// </summary>
+public sealed class SwishConfigurationException : SwishException
+{
+    public SwishConfigurationException(string message)
+        : base(message)
+    {
+    }
+
+    public SwishConfigurationException(string message, Exception innerException)
+        : base(message, null, null, innerException)
+    {
+    }
+}
+

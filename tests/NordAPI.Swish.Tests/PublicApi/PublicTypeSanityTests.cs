@@ -29,6 +29,7 @@ public sealed class PublicTypeSanityTests
             "NordAPI.Swish.Errors.SwishException",
             "NordAPI.Swish.Errors.SwishAuthException",
             "NordAPI.Swish.Errors.SwishValidationException",
+            "NordAPI.Swish.Errors.SwishConfigurationException",
             "NordAPI.Swish.Errors.SwishConflictException",
             "NordAPI.Swish.Errors.SwishTransientException",
             "NordAPI.Swish.Errors.SwishApiError",

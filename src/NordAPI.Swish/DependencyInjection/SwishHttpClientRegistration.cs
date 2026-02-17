@@ -63,7 +63,7 @@ namespace NordAPI.Swish.DependencyInjection
 #endif
                     return h;
                 }
-                return SwishMtlsHandlerFactory.Create();
+                return SwishMtlsHandlerFactory.Create(new SwishOptions());
             };
 
             // Preserve test/host Primary; only set ours if none exists.

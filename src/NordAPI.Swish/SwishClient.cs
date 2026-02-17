@@ -19,7 +19,6 @@ public sealed class SwishClient : ISwishClient
 {
     private readonly HttpClient _http;
     private readonly ILogger<SwishClient>? _logger;
-    private readonly SwishOptions _options = new();
 
     // Default JSON settings for Swish API communication (camelCase, case-insensitive)
     private static readonly JsonSerializerOptions DefaultJsonSerializerOptions = new()
@@ -34,13 +33,14 @@ public sealed class SwishClient : ISwishClient
     /// Use this when not relying on ASP.NET Core DI extensions.
     /// </summary>
     public static HttpClient CreateHttpClient(
+        SwishOptions options,
         Uri baseAddress,
         string apiKey,
         string secret,
         HttpMessageHandler? innerHandler = null)
     {
         // Innermost transport w/ optional mTLS (reads SWISH_PFX_PATH / SWISH_PFX_PASSWORD)
-        var mtlsHandler = SwishMtlsHandlerFactory.Create();
+        var mtlsHandler = SwishMtlsHandlerFactory.Create(options);
 
         // Build pipeline: HMAC -> RateLimit -> (custom inner?) -> mTLS transport
         var pipeline = new HmacSigningHandler(apiKey, secret)
@@ -61,8 +61,9 @@ public sealed class SwishClient : ISwishClient
     {
         _http = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         _logger = logger;
-        if (options is not null) _options = options;
+        _ = options; // intentionally unused (options are not used by instance client currently)
     }
+
 
     // =======================================================================
     // Retry-safe HTTP executor (uses a request factory to recreate the request)

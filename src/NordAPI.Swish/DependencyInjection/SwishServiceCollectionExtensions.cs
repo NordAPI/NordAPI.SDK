@@ -58,7 +58,7 @@ public static class SwishServiceCollectionExtensions
             }
 
             // Env-controlled mTLS (SWISH_PFX_PATH + SWISH_PFX_PASSWORD or legacy SWISH_PFX_PASS); plain fallback if missing.
-            return SwishMtlsHandlerFactory.Create();
+            return SwishMtlsHandlerFactory.Create(opts);
         };
 
         // Ensure the Primary-preserving filter is registered once.

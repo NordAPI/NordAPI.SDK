@@ -26,4 +26,12 @@ public sealed class SwishOptions
     /// Optional mTLS options (PFX path, password, dev relax setting).
     /// </summary>
     public SwishCertificateOptions? Certificate { get; set; }
+
+    /// <summary>
+    /// When true (default), the SDK requires a client certificate to be configured for mTLS.
+    /// If no certificate can be resolved, the SDK will throw a <c>SwishConfigurationException</c>.
+    /// Set to false only for controlled development/testing scenarios where mTLS is intentionally not used.
+    /// </summary>
+    public bool RequireMtls { get; set; } = true;
 }
+

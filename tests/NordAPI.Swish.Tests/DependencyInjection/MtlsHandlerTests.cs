@@ -6,6 +6,10 @@ using System.Security.Cryptography.X509Certificates;
 using FluentAssertions;
 using NordAPI.Swish.Security.Http;
 using Xunit;
+using NordAPI.Swish;
+using NordAPI.Swish.Errors;
+
+namespace NordAPI.Swish.Tests.DependencyInjection;
 
 /// <summary>
 /// Unit tests for SwishMtlsHandlerFactory.
@@ -27,7 +31,7 @@ public class MtlsHandlerTests
 
         try
         {
-            var handler = SwishMtlsHandlerFactory.Create();
+            var handler = SwishMtlsHandlerFactory.Create(new SwishOptions { RequireMtls = false });
             handler.Should().NotBeNull();
             handler.Should().BeOfType<SocketsHttpHandler>();
             var sockets = (SocketsHttpHandler)handler;
@@ -86,7 +90,7 @@ public class MtlsHandlerTests
             Environment.SetEnvironmentVariable("SWISH_PFX_PATH", tempPfx);
             Environment.SetEnvironmentVariable("SWISH_PFX_PASSWORD", password);
 
-            var handler = SwishMtlsHandlerFactory.Create();
+            var handler = SwishMtlsHandlerFactory.Create(new SwishOptions { RequireMtls = false });
             handler.Should().BeOfType<SocketsHttpHandler>();
             var sockets = (SocketsHttpHandler)handler;
 
@@ -111,7 +115,7 @@ public class MtlsHandlerTests
         var path = Environment.GetEnvironmentVariable("SWISH_PFX_PATH");
         var password = Environment.GetEnvironmentVariable("SWISH_PFX_PASSWORD");
 
-        var handler = SwishMtlsHandlerFactory.Create();
+        var handler = SwishMtlsHandlerFactory.Create(new SwishOptions { RequireMtls = false });
         handler.Should().BeOfType<SocketsHttpHandler>();
         var sockets = (SocketsHttpHandler)handler;
 
@@ -126,4 +130,31 @@ public class MtlsHandlerTests
                 .Should().BeTrue("no env -> no client certificate");
         }
     }
+
+    [Fact]
+    public void Create_ShouldThrow_WhenRequireMtlsIsTrueAndCertsMissing()
+    {
+        var prevPath = Environment.GetEnvironmentVariable("SWISH_PFX_PATH");
+        var prevPass = Environment.GetEnvironmentVariable("SWISH_PFX_PASSWORD");
+        var prevLegacy = Environment.GetEnvironmentVariable("SWISH_PFX_PASS");
+
+        try
+        {
+            Environment.SetEnvironmentVariable("SWISH_PFX_PATH", null);
+            Environment.SetEnvironmentVariable("SWISH_PFX_PASSWORD", null);
+            Environment.SetEnvironmentVariable("SWISH_PFX_PASS", null);
+
+            var act = () => SwishMtlsHandlerFactory.Create(new SwishOptions { RequireMtls = true });
+
+            act.Should().Throw<SwishConfigurationException>()
+                .WithMessage("*mTLS is required but no client certificate was configured*");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("SWISH_PFX_PATH", prevPath);
+            Environment.SetEnvironmentVariable("SWISH_PFX_PASSWORD", prevPass);
+            Environment.SetEnvironmentVariable("SWISH_PFX_PASS", prevLegacy);
+        }
+    }
+
 }
