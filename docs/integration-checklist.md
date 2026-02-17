@@ -21,7 +21,7 @@ This is a concise checklist to get a production-ready integration with the NordA
 
 ## 2) Webhook Configuration
 
-Your Swish callback endpoint must verify HMAC and reject replays.
+Your Swish callback endpoint must be secure and reject replays. Swish does not send HMAC signature headers; the `X-Swish-*` checks below apply **only if you add an optional signing layer** (e.g., an internal proxy/gateway or a local test tool) on top of Swish callbacks.
 
 ### Official Swish callback constraints (MIG 2.6)
 
@@ -31,9 +31,9 @@ Your Swish callback endpoint must verify HMAC and reject replays.
   Delivery stops when your endpoint returns **HTTP 200 OK** or retries are exhausted.
 - If you have not received a callback within your expected timeframe, use the **Retrieve** operation to fetch the status from Swish.
 
-> Note: Swish callback delivery is handled by Swish; the HMAC headers below are used by NordAPI’s verifier when you sign requests from your client/test tool.
+> Note: Swish callback delivery is handled by Swish and does not include `X-Swish-*` signature headers. The headers below are only used by NordAPI’s verifier when **you** sign requests from your client/test tool or an internal proxy/gateway.
 
-**Required headers** for NordAPI webhook verification (when using your client/test tool):
+**Optional NordAPI signing headers** (ONLY if you add an extra signing layer; **not sent by Swish**):
 - `X-Swish-Timestamp` — UNIX timestamp **in seconds**
 - `X-Swish-Nonce` — unique nonce (GUID/128-bit random)
 - `X-Swish-Signature` — `Base64(HMACSHA256(secret, canonical))`
@@ -49,7 +49,7 @@ Where:
 **Server verification must**:
 - [ ] Parse the three headers (timestamp, nonce, signature)
 - [ ] Rebuild the canonical string exactly as above
-- [ ] Compute `HMACSHA256` with your `SWISH_SECRET`
+- [ ] Compute `HMACSHA256` with your `SWISH_WEBHOOK_SECRET` (the webhook signing secret for the optional NordAPI layer)
 - [ ] Compare with `X-Swish-Signature` (Base64)
 - [ ] Enforce **timestamp skew**: ±5 minutes
 - [ ] Enforce **replay protection**: nonce must be unique (see section 3)

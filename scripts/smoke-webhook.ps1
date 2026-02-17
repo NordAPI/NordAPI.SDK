@@ -9,7 +9,7 @@ $Body = '{"id":"smoke-verify","amount":50}'
 
 # 2) Build ts/nonce + canonical
 $Ts    = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
-$Nonce = [guid]::NewGuid().ToString('N')
+$Nonce = [guid]::NewGuid().ToString()
 $Canon = "$Ts`n$Nonce`n$Body"
 
 # 3) HMAC (Base64)
@@ -50,7 +50,7 @@ try {
 if ($Replay) {
   Write-Host "(replay) ---"
   try {
-    # Send again with the SAME nonce/signature (should become 401 replay)
+    # Send again with the SAME nonce/signature (should be rejected as replay: non-200, commonly 401/403/409)
     $resp2 = Invoke-RestMethod -Method Post -Uri $Url `
       -Headers @{
         'X-Swish-Timestamp' = "$Ts"

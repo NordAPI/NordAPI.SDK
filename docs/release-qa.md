@@ -23,19 +23,24 @@ Run from repo root:
 Optional (but recommended for confidence):
 - [ ] `dotnet test -c Release --collect:"XPlat Code Coverage"` (if coverage is enabled in this repo)
 
+## B2. mTLS fail-fast (enforced by default)
+- [ ] With `RequireMtls = true` (default) and **no** client certificate configured (`SWISH_PFX_PATH` not set / invalid), SDK startup fails fast by throwing `SwishConfigurationException` when the HTTP handler is created.
+- [ ] With `RequireMtls = false` (test/mock only), the app starts without requiring a client certificate.
+
 ---
 
-## C. Webhook verification (functional hardening)
-- [ ] Smoke test passes locally (success case).
+## C. Webhook verification (Swish baseline + optional signing layer)
+- [ ] Swish baseline: endpoint is HTTPS-only and returns **HTTP 200** only after successful processing (non-200 triggers Swish retries).
 - [ ] Replay protection works (same nonce rejected) and returns a consistent failure status (commonly 401/403 or 409).
 - [ ] Timestamp skew is enforced (old/new timestamps rejected) and returns a consistent failure status.
-- [ ] Signature mismatch returns 401/403 (consistent behavior).
+- [ ] Optional signing layer (ONLY if enabled): signature mismatch returns 401/403 (consistent behavior).
 - [ ] Handler is idempotent (duplicate callbacks do not break business logic).
+> Note: Swish does not send `X-Swish-*` HMAC signature headers. Signature checks apply only if you add an optional signing layer (internal proxy/gateway or local test tool).
 
 Suggested commands (repo-specific):
 - Run sample server:
   - [ ] Set `SWISH_WEBHOOK_SECRET` (dev only) and start the sample.
-- Run smoke script:
+- Run smoke script (tests the optional signing layer):
   - [ ] `.\scripts\smoke-webhook.ps1 ...` (verify expected 200 and a consistent failure status for replay/timestamp/signature)
 
 Production guidance:
@@ -75,6 +80,7 @@ Quick local checks:
 - [ ] `docs/spec-parity/swish-commerce-callback.md` exists and tracks “before release” spec-lock items.
 - [ ] Src package READMEs render correctly (EN/SV), and do not claim unsupported behavior.
 - [ ] Avoid README encoding issues: edits done in editor; final files have LF and no BOM.
+- [ ] Public API contract is updated: `SwishConfigurationException` exists in `tests/NordAPI.Swish.Tests/PublicApi/PublicTypeSanityTests.cs` (CI must not break on release).
 
 ---
 
@@ -94,7 +100,7 @@ Upload/provide the following (as files or pasted excerpts):
 - [ ] Callback retry policy section (exact retry count and intervals; stop condition).
 - [ ] TLS minimum version requirements (exact statement, including dates if present).
 - [ ] Any official Swish IP allowlisting information (IP ranges / where published).
-- [ ] Any official statements about callback authentication (confirm whether Swish sends any signature headers or not).
+- [ ] Any official statements about callback authentication (confirm that Swish does **not** send signature headers; document any exception if the guide says otherwise).
 
 Outcome:
 - [ ] Update `docs/spec-parity/...` with exact section references and confirmed values.

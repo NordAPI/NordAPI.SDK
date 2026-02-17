@@ -1,7 +1,7 @@
 # Spec parity: Swish Commerce callback (Merchant Integration Guide 2.6)
 
 Goal: Keep a clear mapping between the official Swish requirements and NordAPI.Swish SDK behavior/docs.
-This is intentionally short (MVP) and should be expanded before release.
+This document is intentionally short and operational. Expand only when the official spec changes or when NordAPI behavior changes.
 
 Source: Swish Merchant Integration Guide 2.6 (PDF)
 - Technical callback requirements (verify exact section): HTTPS on port 443, TLS certificate validation, IP filtering recommendation, no SNI.
