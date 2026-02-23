@@ -142,8 +142,8 @@ On replay/signature/header errors, the endpoint returns a non-200 response.
 ## QuickStart
 
 ```powershell
-git clone https://github.com/NordAPI/NordAPI.SwishSdk.git
-cd NordAPI.SwishSdk
+git clone https://github.com/NordAPI/NordAPI.Swish.git
+cd NordAPI.Swish
 dotnet run --project .\samples\SwishSample.Web\SwishSample.Web.csproj --urls http://localhost:5000
 ```
 
