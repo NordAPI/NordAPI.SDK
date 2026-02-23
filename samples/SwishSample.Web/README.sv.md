@@ -142,8 +142,8 @@ Vid replay/signatur/header-fel returnerar endpointen en non-200 respons.
 ## QuickStart
 
 ```powershell
-git clone https://github.com/NordAPI/NordAPI.SwishSdk.git
-cd NordAPI.SwishSdk
+git clone https://github.com/NordAPI/NordAPI.Swish.git
+cd NordAPI.Swish
 dotnet run --project .\samples\SwishSample.Web\SwishSample.Web.csproj --urls http://localhost:5000
 ```
 

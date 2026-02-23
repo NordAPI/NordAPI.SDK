@@ -1,4 +1,4 @@
-# Release QA (Quality Gate) — NordAPI.SwishSdk (MVP)
+# Release QA (Quality Gate) — NordAPI.Swish (MVP)
 
 This checklist is the single “go/no-go” gate before any public release (NuGet/GitHub visibility).
 Keep it short, factual, and executable.

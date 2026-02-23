@@ -9,12 +9,12 @@
 
 Officiellt NordAPI SDK för Swish och kommande BankID-integrationer.
 
-[![Build](https://github.com/NordAPI/NordAPI.SwishSdk/actions/workflows/ci.yml/badge.svg)](https://github.com/NordAPI/NordAPI.SwishSdk/actions/workflows/ci.yml)
+[![Build](https://github.com/NordAPI/NordAPI.Swish/actions/workflows/ci.yml/badge.svg)](https://github.com/NordAPI/NordAPI.Swish/actions/workflows/ci.yml)
 [![NuGet](https://img.shields.io/nuget/v/NordAPI.Swish.svg?label=NuGet)](https://www.nuget.org/packages/NordAPI.Swish)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 ![.NET](https://img.shields.io/badge/.NET-8%2B-blueviolet)
 
-> 🇬🇧 English version: [README.md](https://github.com/NordAPI/NordAPI.SwishSdk/blob/main/README.md)
+> 🇬🇧 English version: [README.md](https://github.com/NordAPI/NordAPI.Swish/blob/main/README.md)
 > ✅ Se även: [Integration Checklist](https://nordapi.net/integration-checklist/)
 
 Ett lättviktigt och säkert .NET SDK för att integrera **Swish-betalningar och återköp** i test- och utvecklingsmiljöer.
@@ -351,7 +351,7 @@ services.AddHttpClient("Swish")
 
 ## 💬 Få hjälp
 
-- 📂 Öppna [GitHub Issues](https://github.com/NordAPI/NordAPI.SwishSdk/issues) för allmänna frågor eller buggrapporter.
+- 📂 Öppna [GitHub Issues](https://github.com/NordAPI/NordAPI.Swish/issues) för allmänna frågor eller buggrapporter.
 - 🔒 Säkerhetsärenden? E-posta [security@nordapi.com](mailto:security@nordapi.com).
 
 ---
