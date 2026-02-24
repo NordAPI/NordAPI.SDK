@@ -32,7 +32,7 @@
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 
     <!-- Version for this release (update per release) -->
-    <Version>1.1.0</Version>
+    <Version>1.1.1</Version>
   </PropertyGroup>
 
   <!-- Ensure README.md is packed into the NuGet package root (each project can also override) -->
