@@ -276,8 +276,10 @@ Använd den här checklistan innan du kör mot riktiga Swish/BankID-miljöer.
 - Neka requests utanför tillåtet tidsfönster (rekommendation: **±5 minuter**).
 - Kör **anti-replay** med persistenta nonces (Redis/DB). Använd **inte** in-memory nonce-store i produktion.
 
+Valfritt (distribuerat): För produktion över flera instanser, se docs/optional/redis-nonce-store.md för delat nonce-state (replay protection).
+
 ### Drift-härdning
-- Stäng av debug-relaxation i produktion (undvik t.ex. att tillåta gamla timestamps).
+- Stäng av alla debug-relaxations i produktion (undvik t.ex. att tillåta gamla timestamps).
 - Lägg på rate limiting och strukturerad loggning (undvik PII i loggar).
 - Bevaka verifieringsfel (signatur mismatch, tidsdrift, replay) och larma vid avvikelser.
 
@@ -294,7 +296,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSwishClient(opts =>
 {
     opts.BaseAddress = new Uri(Environment.GetEnvironmentVariable("SWISH_BASE_URL")
-        ?? throw new InvalidOperationException("Saknar SWISH_BASE_URL");
+        ?? throw new InvalidOperationException("Saknar SWISH_BASE_URL"));
     opts.ApiKey = Environment.GetEnvironmentVariable("SWISH_API_KEY")
         ?? throw new InvalidOperationException("Saknar SWISH_API_KEY");
     opts.Secret = Environment.GetEnvironmentVariable("SWISH_SECRET")
@@ -333,18 +335,18 @@ SDK:t tillhandahåller en **opt-in** namngiven `HttpClient` **"Swish"** med:
 
 **Aktivera:**
 ```csharp
-services.AddSwishHttpClient(); // registrerar "Swish" (HTTP-pipeline + mTLS om miljövariabler finns)
+services.AddSwishMtlsTransport(); // registrerar "Swish" (HTTP-pipeline + mTLS om miljövariabler finns)
 ```
 
 **Utöka eller ersätt:**
 ```csharp
-services.AddSwishHttpClient();
+services.AddSwishMtlsTransport();
 services.AddHttpClient("Swish")
         .AddHttpMessageHandler(_ => new MyCustomHandler()); // ligger utanför SDK:ns HTTP-pipeline
 ```
 
 **Avaktivera:**
-- Anropa inte `AddSwishHttpClient()` om du inte vill anpassa SDK:ns HTTP-pipeline.
+- Anropa inte `AddSwishMtlsTransport()` om du inte vill anpassa SDK:ns HTTP-pipeline.
 - Eller registrera om `"Swish"` manuellt för att ersätta eller utöka handlers och inställningar.
 
 ---

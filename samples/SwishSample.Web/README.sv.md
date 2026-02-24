@@ -25,21 +25,22 @@ Detta sample är en minimal ASP.NET Core-app för att testa Swish webhook-endpoi
 
 ## Miljövariabler för lokal utveckling
 
-Rekommenderade defaults:
+Rekommenderade standardvärden:
 
 ```powershell
-$env:ASPNETCORE_ENVIRONMENT  = "Development"
-$env:SWISH_WEBHOOK_SECRET    = "dev_secret"
-$env:SWISH_DEBUG             = "1"
-$env:SWISH_REQUIRE_NONCE     = "1"
-$env:SWISH_NONCE_TTL_SECONDS = "600"
+$env:ASPNETCORE_ENVIRONMENT = "Development"
+$env:SWISH_WEBHOOK_SECRET   = "dev_secret"
 
-# Endast dev (håll AV om du inte felsöker)
-$env:SWISH_ALLOW_OLD_TS      = "0"
+# Valfritt (distribuerat): Redis-anslutning (endast om sample-appen faktiskt läser den)
+$env:SWISH_REDIS            = "localhost:6379"
+
+# Om sample-appen använder dem:
+# $env:SWISH_ENV            = "Sandbox"
+# $env:SWISH_BASE_URL       = "https://..."
 ```
 
-**Säkerhetsnotis:** `SWISH_WEBHOOK_SECRET="dev_secret"` är endast för lokal utveckling.
-I test/produktion: sätt en riktig hemlighet via env vars eller en secret store (t.ex. Azure Key Vault). Hårdkoda/committa aldrig hemligheter.
+🔒 **Säkerhetsnotis:** `SWISH_WEBHOOK_SECRET="dev_secret"` är endast för lokal utveckling.
+I test/produktion: sätt en riktig hemlighet via miljövariabler eller en secret store (t.ex. Azure Key Vault). Hårdkoda eller committa aldrig hemligheter.
 
 ---
 

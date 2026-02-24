@@ -271,8 +271,10 @@ Use this checklist before running against real Swish/BankID environments.
 - Reject requests with timestamp skew outside your allowed window (recommendation: **±5 minutes**).
 - Enforce **anti-replay** by persisting nonces (Redis/DB). Do **not** use in-memory nonce storage in production.
 
+Optional (distributed): For production across multiple instances, see docs/optional/redis-nonce-store.md for shared nonce state (replay protection).
+
 ### Operational hardening
-- Disable any debug-only relaxation flags in production (e.g., avoid allowing old timestamps).
+- Disable any debug-only relaxations in production (e.g., avoid allowing old timestamps).
 - Add rate limiting and structured logging (avoid PII in logs).
 - Monitor verification failures (signature mismatch, timestamp drift, replay) and alert on anomalies.
 
@@ -289,7 +291,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSwishClient(opts =>
 {
     opts.BaseAddress = new Uri(Environment.GetEnvironmentVariable("SWISH_BASE_URL")
-        ?? throw new InvalidOperationException("Missing SWISH_BASE_URL");
+        ?? throw new InvalidOperationException("Missing SWISH_BASE_URL"));
     opts.ApiKey = Environment.GetEnvironmentVariable("SWISH_API_KEY")
         ?? throw new InvalidOperationException("Missing SWISH_API_KEY");
     opts.Secret = Environment.GetEnvironmentVariable("SWISH_SECRET")
@@ -328,18 +330,18 @@ The SDK provides an **opt-in** named `HttpClient` **"Swish"** with:
 
 **Enable:**
 ```csharp
-services.AddSwishHttpClient(); // registers "Swish" (HTTP pipeline + mTLS if env vars exist)
+services.AddSwishMtlsTransport(); // registers "Swish" (HTTP pipeline + mTLS if env vars exist)
 ```
 
 **Extend or override:**
 ```csharp
-services.AddSwishHttpClient();
+services.AddSwishMtlsTransport();
 services.AddHttpClient("Swish")
         .AddHttpMessageHandler(_ => new MyCustomHandler()); // runs outside the SDK's HTTP pipeline
 ```
 
 **Disable:**
-- Do not call `AddSwishHttpClient()` unless you want to customize the SDK's HTTP pipeline.
+- Do not call `AddSwishMtlsTransport()` unless you want to customize the SDK's HTTP pipeline.
 - Or re-register `"Swish"` manually to replace handlers or settings.
 
 ---

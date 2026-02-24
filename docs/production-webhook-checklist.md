@@ -52,7 +52,7 @@ This checklist covers production-grade requirements for receiving Swish callback
 - [ ] Add rate limiting and alerting for abnormal traffic patterns.
 
 ## Environment hardening
-- [ ] Ensure all dev-only flags are disabled in Release/Production (e.g. `SWISH_DEBUG`, `SWISH_ALLOW_OLD_TS`).
+- [ ] Ensure all dev-only relaxations are disabled in Release/Production (e.g. do not bypass certificate validation or timestamp checks).
 - [ ] Ensure relaxed TLS validation is never enabled in Release.
 
 ## Operational validation (go-live)
@@ -64,6 +64,8 @@ This checklist covers production-grade requirements for receiving Swish callback
 - [ ] Ensure the handler is **idempotent** (the same event may be delivered more than once).
 - [ ] Decide and document exact status codes for failures (e.g. 401/403 signature, 409 replay) and keep them consistent.
 - [ ] Verify callback retries behave as expected (Swish retries on non-200; HTTP 200 stops retries).
+
+Optional (distributed): For multi-instance production, see docs/optional/redis-nonce-store.md for Redis-backed nonce storage (replay protection).
 
 ## Redis nonce store (recommended)
 - [ ] Set `SWISH_REDIS` in production.

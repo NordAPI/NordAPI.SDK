@@ -28,14 +28,15 @@ This sample is a minimal ASP.NET Core app for testing the Swish webhook endpoint
 Recommended defaults:
 
 ```powershell
-$env:ASPNETCORE_ENVIRONMENT  = "Development"
-$env:SWISH_WEBHOOK_SECRET    = "dev_secret"
-$env:SWISH_DEBUG             = "1"
-$env:SWISH_REQUIRE_NONCE     = "1"
-$env:SWISH_NONCE_TTL_SECONDS = "600"
+$env:ASPNETCORE_ENVIRONMENT = "Development"
+$env:SWISH_WEBHOOK_SECRET   = "dev_secret"
 
-# Dev-only toggle (keep OFF unless you are troubleshooting)
-$env:SWISH_ALLOW_OLD_TS      = "0"
+# Optional (distributed): Redis connection string (only if the sample actually reads it)
+$env:SWISH_REDIS            = "localhost:6379"
+
+# If used by your sample:
+# $env:SWISH_ENV            = "Sandbox"
+# $env:SWISH_BASE_URL       = "https://..."
 ```
 
 🔒 **Security note:** `SWISH_WEBHOOK_SECRET="dev_secret"` is for local development only.
