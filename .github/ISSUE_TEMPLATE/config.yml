@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability report
+    url: mailto:security@nordapi.com
+    about: Report security issues privately. Do not open public issues for security vulnerabilities.
+  - name: Questions / feedback (Discussions)
+    url: https://github.com/NordAPI/NordAPI.Swish/discussions
+    about: Ask questions and share feedback (no secrets/PII).

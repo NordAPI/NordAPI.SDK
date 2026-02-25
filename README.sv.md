@@ -353,8 +353,9 @@ services.AddHttpClient("Swish")
 
 ## 💬 Få hjälp
 
-- 📂 Öppna [GitHub Issues](https://github.com/NordAPI/NordAPI.Swish/issues) för allmänna frågor eller buggrapporter.
-- 🔒 Säkerhetsärenden? E-posta [security@nordapi.com](mailto:security@nordapi.com).
+- 💬 Frågor / feedback: använd [GitHub Discussions](https://github.com/NordAPI/NordAPI.Swish/discussions) (inga secrets/PII).
+- 🐛 Buggar / feature requests: öppna ett [GitHub Issue](https://github.com/NordAPI/NordAPI.Swish/issues).
+- 🔒 Säkerhetsärenden: e-posta [security@nordapi.com](mailto:security@nordapi.com) (öppna inte publika issues/discussions).
 
 ---
 
