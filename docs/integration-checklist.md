@@ -11,6 +11,7 @@ This is a concise checklist to get a production-ready integration with the NordA
   - `SWISH_BASE_URL` — e.g., sandbox URL (or your mock during development)
   - `SWISH_API_KEY`
   - `SWISH_SECRET`
+  - `SWISH_WEBHOOK_SECRET` — secret for optional `X-Swish-*` webhook verification (only if you add the NordAPI hardening layer)
 - [ ] (Production) **mTLS certificate** is loaded via secure config (KeyVault/env), never from files in the repo:
   - `SWISH_PFX_PATH` — Absolute path to client certificate (.pfx/.p12)
   - `SWISH_PFX_PASSWORD` — PFX password
@@ -88,7 +89,7 @@ Where:
 
 ## 5) Before Go-Live
 
-- [ ] Replace all dev values (`SWISH_BASE_URL`, `SWISH_API_KEY`, `SWISH_SECRET`)
+- [ ] Replace all dev values (`SWISH_BASE_URL`, `SWISH_API_KEY`, `SWISH_SECRET`, `SWISH_WEBHOOK_SECRET`)
 - [ ] Install production mTLS certificate (via KeyVault/env; never commit certs to the repo)
 - [ ] Enable **Redis/DB** backed nonce store; clear/rotate before launch
 - [ ] Verify **HMAC** on a real/integration path, compare canonical line-by-line
