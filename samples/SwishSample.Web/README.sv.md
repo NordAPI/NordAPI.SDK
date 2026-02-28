@@ -220,5 +220,6 @@ dotnet run --project .\samples\SwishSample.Web\SwishSample.Web.csproj --urls htt
 ## Se även
 
 - Root README: `../../README.md`
-- Integration checklist: https://nordapi.net/integration-checklist/
+- Integration checklist (web): https://nordapi.net/integration-checklist/
+- Integration checklist (repo): ../../docs/integration-checklist.md
 - Paket-README: `../../src/NordAPI.Swish/README.md`

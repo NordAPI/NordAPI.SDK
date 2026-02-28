@@ -15,7 +15,7 @@ Official NordAPI SDK for Swish and upcoming BankID integrations.
 ![.NET](https://img.shields.io/badge/.NET-8%2B-blueviolet)
 
 > 🇸🇪 Swedish version: [README.sv.md](https://github.com/NordAPI/NordAPI.SDK/blob/main/src/NordAPI.Swish/README.sv.md)
-> ✅ See also: [Integration Checklist](https://nordapi.net/integration-checklist/)
+> ✅ See also: [Integration Checklist (web)](https://nordapi.net/integration-checklist/) • [Integration Checklist (repo)](../../docs/integration-checklist.md)
 
 A lightweight and secure .NET SDK for integrating **Swish payments and refunds** with deterministic, fail-closed defaults.
 Includes enforced-by-default mTLS, optional HMAC hardening for webhook verification, and rate limiting helpers.
@@ -195,6 +195,9 @@ curl -v -X POST http://localhost:5000/payments \
 - Your backend creates the payment via `CreatePaymentAsync`.
 - The end-user approves in the Swish app.
 - Swish POSTs the result to your **webhook** (`callbackUrl`).
+
+> Note: Swish does not provide these `X-Swish-*` headers by default. This is NordAPI’s optional webhook hardening pattern (you add it at your edge).
+
   Your webhook must verify HMAC (`X-Swish-Signature`) as **Base64** HMAC-SHA256 of `"<ts>\n<nonce>\n<body>"` (UTF-8).
 
 ---

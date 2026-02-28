@@ -14,7 +14,7 @@ Official NordAPI SDK for Swish and upcoming BankID integrations.
 ![.NET](https://img.shields.io/badge/.NET-8%2B-blueviolet)
 
 > 🇸🇪 Swedish version: [README.sv.md](https://github.com/NordAPI/NordAPI.SDK/blob/main/README.sv.md)
-> ✅ See also: [Integration Checklist](https://nordapi.net/integration-checklist/)
+> ✅ See also: [Integration Checklist (web)](https://nordapi.net/integration-checklist/) • [Integration Checklist (repo)](./docs/integration-checklist.md)
 
 A lightweight and secure .NET SDK for integrating **Swish payments and refunds** with deterministic, fail-closed defaults.
 Includes enforced-by-default mTLS, optional HMAC hardening for webhook verification, and rate limiting helpers.
@@ -58,7 +58,7 @@ With this SDK you get a working Swish client in just minutes:
 - **HttpClientFactory** for configuring the HTTP pipeline (HMAC, rate limiting, mTLS)
 - **Optional NordAPI Security Hardening (HMAC signing)** for outbound requests (not Swish-official)
 - **mTLS (enforced by default)** via environment variables — strict chain in Release; relaxed only in Debug (local)
-- **Webhook verification** with replay protection (nonce-store)
+- **Webhook verification (optional hardening)** with replay protection (nonce-store). Swish does not send `X-Swish-*` signature headers by default.
 - **Internal retry/backoff** for transient errors (single retry layer; Idempotency-Key reused per operation)
 
 
@@ -262,7 +262,8 @@ Use this checklist before running against real Swish/BankID environments.
 - Enforce **HTTPS-only** for all webhook endpoints (consider HSTS at the edge).
 - If you terminate TLS at a reverse proxy, ensure the internal hop is trusted and locked down.
 
-### Webhook verification (required)
+### Webhook verification (required for this hardening layer)
+> Note: Swish does not provide these `X-Swish-*` headers by default. They are part of NordAPI’s optional webhook hardening pattern (you add them at your edge).
 - Require these headers:
   - `X-Swish-Timestamp` (Unix time in **seconds**)
   - `X-Swish-Nonce`

@@ -15,7 +15,7 @@ Officiellt NordAPI SDK för Swish och kommande BankID-integrationer.
 ![.NET](https://img.shields.io/badge/.NET-8%2B-blueviolet)
 
 > 🇬🇧 English version: [README.md](https://github.com/NordAPI/NordAPI.SDK/blob/main/README.md)
-> ✅ Se även: [Integration Checklist](https://nordapi.net/integration-checklist/)
+> ✅ Se även: [Integration Checklist (web)](https://nordapi.net/integration-checklist/) • [Integration Checklist (repo)](./docs/integration-checklist.md)
 
 Ett lättviktigt och säkert .NET SDK för att integrera **Swish-betalningar och återköp** med deterministiska, fail-closed standardval.
 Inkluderar mTLS som är påslaget som standard, valfri HMAC-härdning för webhook-verifiering och hjälpfunktioner för hastighetsbegränsning.
@@ -59,7 +59,7 @@ Med detta SDK får du en fungerande Swish-klient på bara några minuter:
 - **HttpClientFactory** för att konfigurera HTTP-pipelinen (HMAC, rate limiting, mTLS)
 - **Valfri NordAPI Security Hardening (HMAC-signering)** för utgående requests (inte Swish-officiellt)
 - **mTLS (krävs som standard)** via miljövariabler — strikt kedja i Release; avslappnad endast i Debug (lokalt)
-- **Webhook-verifiering** med replay-skydd (nonce-store)
+- **Webhook-verifiering (valfri hardening)** med replay-skydd (nonce-store). Swish skickar inte `X-Swish-*` signatur-headers som standard.
 - **Intern retry/backoff** för transienta fel (endast ett retry-lager; Idempotency-Key återanvänds per operation)
 
 ### 1) Installera / referera
@@ -267,7 +267,8 @@ Använd den här checklistan innan du kör mot riktiga Swish/BankID-miljöer.
 - Kör **endast HTTPS** för webhook-endpoints (överväg HSTS vid edge).
 - Om du terminerar TLS i en reverse proxy: lås ner och lita på interna hopp.
 
-### Webhook-verifiering (krav)
+### Webhook-verifiering (krävs för detta hardening-lager)
+> Obs: Swish skickar inte dessa `X-Swish-*` headers som standard. Det här är NordAPI:s valfria webhook-hardening-mönster (du lägger det vid din edge).
 - Kräv dessa headers:
   - `X-Swish-Timestamp` (Unix-tid i **sekunder**)
   - `X-Swish-Nonce`

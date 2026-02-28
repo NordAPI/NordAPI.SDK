@@ -185,9 +185,12 @@ public sealed class SwishClient : ISwishClient
     public async Task<string> PingAsync(CancellationToken ct = default)
     {
         _logger?.LogInformation("Calling /ping...");
-        using var res = await _http.GetAsync("/ping", ct).ConfigureAwait(false);
-        res.EnsureSuccessStatusCode();
-        var payload = await res.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+
+        var payload = await SendWithPolicyAsync<string>(
+            () => new HttpRequestMessage(HttpMethod.Get, "/ping"),
+            isCreate: false,
+            ct: ct).ConfigureAwait(false);
+
         _logger?.LogInformation("Ping OK (bytes={Length}).", payload.Length);
         return payload;
     }
