@@ -1,12 +1,5 @@
 # NordAPI.Swish SDK
 
-> **Produktionsnotis**
-> Minneslagring av nonce är endast för **utvecklingsmiljö**. I produktion **måste** du använda en persistent lagring (Redis/DB).
-> Ange `SWISH_REDIS` (eller `REDIS_URL` / `SWISH_REDIS_CONN`). Exempelappen stoppar start i `Production` om ingen Redis är satt.
-
-**Licensnotis:** NordAPI är ett SDK. Du behöver egna Swish/BankID-avtal och certifikat. NordAPI tillhandahåller inte dessa.
-
-
 Officiellt NordAPI-bibliotek för Swish-betalningar.
 
 [![Build](https://github.com/NordAPI/NordAPI.Swish/actions/workflows/ci.yml/badge.svg)](https://github.com/NordAPI/NordAPI.Swish/actions/workflows/ci.yml)
@@ -22,6 +15,30 @@ Inkluderar mTLS som är påslaget som standard, valfri HMAC-härdning för webho
 💡 *Stöd för BankID kommer härnäst — håll utkik efter paketet `NordAPI.BankID`.*
 
 **Kräver .NET 8+ (LTS-kompatibel)**
+
+> **Produktionsnotis**
+> Minneslagring av nonce är endast för **utvecklingsmiljö**. I produktion **måste** du använda en persistent lagring (Redis/DB).
+> Ange `SWISH_REDIS` (eller `REDIS_URL` / `SWISH_REDIS_CONN`). Exempelappen stoppar start i `Production` om ingen Redis är satt.
+
+**Licensnotis:** NordAPI är ett SDK. Du behöver egna Swish/BankID-avtal och certifikat. NordAPI tillhandahåller inte dessa.
+
+---
+
+## Scope
+
+För att hålla SDK:t fokuserat och lätt att granska är gränserna medvetet smala.
+
+### Inom scope
+- **mTLS för Swish API-kommunikation**
+- **Deterministisk HMAC-SHA256-signering och webhook-verifiering**
+- **Spec-låst hantering av säkerhetsrelevanta protokollelement** som timestamps, nonces och canonicalization
+- **Fail-closed-validering av säkerhetskänslig konfiguration** vid applikationsstart
+
+### Utanför scope
+- **Secret management** i din miljö (generering, lagring, rotation)
+- **Infrastruktur-säkerhet** såsom WAF, brandväggar och IDS/IPS
+- **Persistensimplementation** för nonce-lagring (till exempel Redis eller SQL)
+- **Merchant onboarding, avtal och extern tillgänglighet i Swish-plattformen**
 
 ---
 
@@ -374,4 +391,4 @@ Detta projekt är licensierat under **MIT-licensen**.
 
 ---
 
-_Senast uppdaterad: Februari 2026_
+_Senast uppdaterad: Mars 2026_

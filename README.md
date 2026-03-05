@@ -1,10 +1,4 @@
-﻿# NordAPI.Swish SDK
-
-> **Production notice**
-> In-memory nonce store is for **development only**. In production you **must** use a persistent store (Redis/DB).
-> Set `SWISH_REDIS` (or `REDIS_URL` / `SWISH_REDIS_CONN`). The sample fails fast in `Production` if none is set.
-
-**Licensing notice:** NordAPI is an SDK. You need your own Swish/BankID production agreements and certificates. NordAPI does not provide them.
+# NordAPI.Swish SDK
 
 Official NordAPI library for Swish payments.
 
@@ -21,6 +15,30 @@ Includes enforced-by-default mTLS, optional HMAC hardening for webhook verificat
 💡 *BankID support is planned next — stay tuned for the `NordAPI.BankID` package.*
 
 **Requires .NET 8+ (LTS compatible)**
+
+> **Production notice**
+> In-memory nonce store is for **development only**. In production you **must** use a persistent store (Redis/DB).
+> Set `SWISH_REDIS` (or `REDIS_URL` / `SWISH_REDIS_CONN`). The sample fails fast in `Production` if none is set.
+
+**Licensing notice:** NordAPI is an SDK. You need your own Swish/BankID production agreements and certificates. NordAPI does not provide them.
+
+---
+
+## Scope
+
+To keep the SDK focused and reviewable, the boundaries are intentionally narrow.
+
+### In Scope
+- **mTLS for Swish API communications**
+- **Deterministic HMAC-SHA256 signing and webhook verification**
+- **Spec-locked handling of security-relevant protocol elements** such as timestamps, nonces, and canonicalization
+- **Fail-closed validation of security-sensitive configuration** during application startup
+
+### Out of Scope
+- **Secret management** in your environment (generation, storage, rotation)
+- **Infrastructure security** such as WAF, firewalling, and IDS/IPS
+- **Persistence implementation** for nonce storage (for example Redis or SQL)
+- **Merchant onboarding, agreements, and external Swish platform availability**
 
 ---
 
@@ -369,5 +387,5 @@ This project is licensed under the **MIT License**.
 
 ---
 
-_Last updated: February 2026_
+_Last updated: March 2026_
 

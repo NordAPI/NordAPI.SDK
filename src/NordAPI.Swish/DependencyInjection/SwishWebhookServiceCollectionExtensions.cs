@@ -3,11 +3,15 @@ using Microsoft.Extensions.DependencyInjection;
 using NordAPI.Swish.Webhooks;
 
 namespace NordAPI.Swish.DependencyInjection;
+
 /// <summary>
 /// Service collection extensions for registering Swish webhook verification services.
 /// </summary>
 public static class SwishWebhookServiceCollectionExtensions
 {
+    private static readonly TimeSpan MaxAllowedClockSkew = TimeSpan.FromMinutes(15);
+    private static readonly TimeSpan MaxAllowedMessageAge = TimeSpan.FromMinutes(15);
+
     /// <summary>
     /// Adds the Swish webhook verifier and exposes options as a concrete instance for DI.
     /// </summary>
@@ -21,9 +25,12 @@ public static class SwishWebhookServiceCollectionExtensions
         // IMPORTANT: Verifier depends on SwishWebhookVerifierOptions (not IOptions<>).
         var opts = new SwishWebhookVerifierOptions();
         configure(opts);
-        services.AddSingleton(opts);
 
+        ValidateOptions(opts);
+
+        services.AddSingleton(opts);
         services.AddSingleton<SwishWebhookVerifier>();
+
         return new SwishWebhookBuilder(services);
     }
 
@@ -52,5 +59,22 @@ public static class SwishWebhookServiceCollectionExtensions
 
         builder.Services.AddSingleton<ISwishNonceStore>(_ => new RedisNonceStore(connectionString, prefix));
         return builder;
+    }
+
+    private static void ValidateOptions(SwishWebhookVerifierOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+
+        if (options.AllowedClockSkew < TimeSpan.Zero)
+            throw new InvalidOperationException("SwishWebhookVerifierOptions.AllowedClockSkew must be greater than or equal to zero.");
+
+        if (options.AllowedClockSkew > MaxAllowedClockSkew)
+            throw new InvalidOperationException("SwishWebhookVerifierOptions.AllowedClockSkew must be less than or equal to 15 minutes.");
+
+        if (options.MaxMessageAge < TimeSpan.Zero)
+            throw new InvalidOperationException("SwishWebhookVerifierOptions.MaxMessageAge must be greater than or equal to zero.");
+
+        if (options.MaxMessageAge > MaxAllowedMessageAge)
+            throw new InvalidOperationException("SwishWebhookVerifierOptions.MaxMessageAge must be less than or equal to 15 minutes.");
     }
 }
