@@ -1,4 +1,4 @@
-name: NuGet Publish (tag + gate)
+﻿name: NuGet Publish (tag + gate)
 
 on:
   workflow_dispatch:

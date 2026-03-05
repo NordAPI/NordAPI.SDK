@@ -1,4 +1,4 @@
-name: i18n-lint
+﻿name: i18n-lint
 on:
   workflow_dispatch:
   pull_request:
