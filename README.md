@@ -62,7 +62,7 @@ To keep the SDK focused and reviewable, the boundaries are intentionally narrow.
 ## 📚 Table of Contents
 - [🚀 Features](#-features)
 - [📦 Requirements](#-requirements)
-- [⬇️ Installation](#️-installation)
+- [⬇️ Installation](#installation)
 - [⚡ Quickstart — Minimal Program.cs](#-quickstart--minimal-programcs)
 - [💳 Usage Example: Creating a Payment](#-usage-example-creating-a-payment)
 - [🧭 Typical Swish Flow (high-level)](#-typical-swish-flow-high-level)
@@ -74,8 +74,8 @@ To keep the SDK focused and reviewable, the boundaries are intentionally narrow.
 - [⏱️ Error Scenarios & Retry Policy](#-error-scenarios--retry-policy)
 - [❓ FAQ](#-faq)
 - [💬 Getting help](#-getting-help)
-- [🚨 Security Disclosure](#️-security-disclosure)
-- [🛠️ Contributing](#️-contributing)
+- [🚨 Security Disclosure](#security-disclosure)
+- [🛠️ Contributing](#contributing)
 - [📦 Release & Versioning](#-release--versioning)
 - [📜 License](#-license)
 
@@ -98,7 +98,7 @@ To keep the SDK focused and reviewable, the boundaries are intentionally narrow.
 
 ---
 
-## ⬇️ Installation
+## Installation
 
 Install from NuGet:
 
@@ -471,12 +471,12 @@ Common responses:
 
 ---
 
-## 🛡️ Security Disclosure
+## Security Disclosure
 If you discover a security issue, please report it privately to `security@nordapi.com`. Do **not** use GitHub Issues for security vulnerabilities.
 
 ---
 
-## 🛠️ Contributing
+## Contributing
 1. Create a feature branch from `main`.
 2. Verify locally: `dotnet build` and `dotnet test`.
 3. Open PR; CI must pass.
