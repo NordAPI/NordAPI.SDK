@@ -463,6 +463,14 @@ Common responses:
 
 ---
 
+## 🏛️ Repository baseline
+
+The current `main` branch is the formal production baseline for NordAPI.Swish.
+
+Earlier development history remains archived separately for traceability, while active development and supported releases continue from the current baseline. This repository structure is intentional and supports a clearer production-facing trust and release posture.
+
+---
+
 ## 💬 Getting help
 - 💬 **Questions / feedback**: Use [GitHub Discussions](https://github.com/NordAPI/NordAPI.Swish/discussions).
 - 🐛 **Bugs / feature requests**: Open a [GitHub Issue](https://github.com/NordAPI/NordAPI.Swish/issues).

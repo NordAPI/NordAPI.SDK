@@ -462,6 +462,14 @@ Vanliga svar:
 
 ---
 
+## 🏛️ Produktionsbaslinje
+
+Nuvarande `main`-gren är den formella produktionsbaslinjen för NordAPI.Swish.
+
+Tidigare utvecklingshistorik finns arkiverad separat för spårbarhet, medan aktiv utveckling och supportade releaser fortsätter från nuvarande baslinje. Denna repo-struktur är avsiktlig och stödjer en tydligare produktionsinriktad release- och förtroendeposition.
+
+---
+
 ## 💬 Få hjälp
 - 💬 **Frågor / feedback**: Använd [GitHub Discussions](https://github.com/NordAPI/NordAPI.Swish/discussions).
 - 🐛 **Buggar / önskemål**: Öppna ett [GitHub Issue](https://github.com/NordAPI/NordAPI.Swish/issues).
